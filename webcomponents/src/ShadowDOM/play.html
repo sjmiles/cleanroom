@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<!--
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<meta charset="utf-8">
+
+<script src="ShadowDOM.js"></script>
+
+<style>
+.el, .sr {
+  height: 300px;
+  width: 300px;
+}
+</style>
+
+<textarea class="el" placeholder="Element host"></textarea>
+<textarea class="sr" placeholder="Shadow Root"></textarea>
+<button onclick="update()">Update</button>
+
+<div class="test">Real</div>
+
+<script>
+
+var el = document.querySelector('.test');
+var sr = el.createShadowRoot();
+
+sr.innerHTML = 'Before <content></content> After';
+
+function update() {
+  el.innerHTML = document.querySelector('.el').value;
+  sr.innerHTML = document.querySelector('.sr').value;
+}
+
+document.querySelector('.el').value = el.innerHTML;
+document.querySelector('.sr').value = sr.innerHTML;
+
+</script>

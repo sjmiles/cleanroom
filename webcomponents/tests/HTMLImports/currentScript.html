@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+<head>
+
+  <title>_currentScript Test</title>
+  
+  <script src="../tools/htmltest.js"></script>
+  <script src="../tools/chai/chai.js"></script>
+  
+  <script src="../../HTMLImports/htmlimports.debug.js"></script>
+  
+  <link rel="import" href="imports/script-1.html">
+  
+</head>
+<body>
+
+  <script>
+    function test() {
+      chai.assert.equal(document._currentScript, document.currentScript, '_currentScript reflects currentScript');
+      chai.assert.isTrue(window.remoteCurrentScriptExecuted);
+      done();
+    }
+
+    HTMLImports.whenReady(test);
+  </script>
+  
+</body>
+</html>

@@ -1,0 +1,21 @@
+<!doctype html>
+<script src="../../tools/chai/chai.js"></script>
+<script src="../../tools/htmltest.js"></script>
+<script src="../../../src/ShadowDOM/ShadowDOM.js"></script>
+<a></a><script>
+var assert = chai.assert;
+var wrap = ShadowDOMPolyfill.wrap;
+
+var a = document.querySelector('a');
+document.write('<script><' + '/script>');
+wrap(document).write('<b></b>');
+assert.equal(a.nextSibling.localName, 'script');
+assert.equal(a.nextSibling.nextSibling.localName, 'script');
+assert.equal(a.nextSibling.nextSibling.nextSibling.localName, 'b');
+
+var all = document.querySelectorAll('*');
+var last = all[all.length - 1];
+assert.equal(last.localName, 'b');
+
+done();
+</script>
