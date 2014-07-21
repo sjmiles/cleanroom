@@ -1,6 +1,9 @@
 <script>
 (function() {
+  
   var doc = document._currentScript.ownerDocument;
+  
+  // TODO(sjmiles): why timeout?
   setTimeout(function() {
     var script = doc.createElement('script')
     script.textContent = 'window.asyncScript = true;';
@@ -14,6 +17,8 @@
     requestAnimationFrame(function() {
       document.dispatchEvent(new CustomEvent('asyncElementsAdded', {bubbles: true}));
     });
+    
   }, 100);
+  
 })();
 </script>

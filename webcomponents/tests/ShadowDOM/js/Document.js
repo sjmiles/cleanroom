@@ -554,7 +554,7 @@ htmlSuite('Document', function() {
             assert.isNull(newValue);
             break;
         }
-        console.log(arguments);
+        //console.log(arguments);
       }
     };
 
@@ -613,7 +613,7 @@ htmlSuite('Document', function() {
     assert.equal('<span is="x-a-span-2"></span>', a3.outerHTML);
   });
 
-  htmlTest('test/html/document-write.html');
+  htmlTest('ShadowDOM/html/document-write.html');
 
-  htmlTest('test/html/head-then-body.html');
+  htmlTest('ShadowDOM/html/head-then-body.html');
 });

@@ -113,5 +113,5 @@ htmlSuite('HTMLBodyElement', function() {
     assert.isTrue(document.body.contains(document.body.firstChild));
   });
 
-  htmlTest('html/document-body-inner-html.html');
+  htmlTest('ShadowDOM/html/document-body-inner-html.html');
 });

@@ -1,25 +1,21 @@
 <!doctype html>
 <html>
 <head>
-
   <title>load ready 404 test</title>
-  
-  <script>
-  </script>
-  
+
   <script src="../tools/htmltest.js"></script>
   <script src="../tools/chai/chai.js"></script>
-  
-  <script src="../../HTMLImports/htmlimports.debug.js"></script>
-  
+
+  <script src="../../src/HTMLImports/HTMLImports.js"></script>  
+
   <link rel="import" href="imports/404-1.html">
   <link rel="import" href="imports/404-2.html">
   <link rel="import" href="imports/404-3.html">
   <link rel="import" href="imports/404-4.html">
-  
+
 </head>
 <body>
-
+  
   <script>
     var loaded = false;
     document.addEventListener('HTMLImportsLoaded', function() {

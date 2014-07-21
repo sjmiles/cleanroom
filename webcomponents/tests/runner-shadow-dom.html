@@ -15,13 +15,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <title>WebComponents Tests</title>
 
   <link rel="stylesheet" href="tools/mocha/mocha.css" />
-  
+
+  <script src="../src/ShadowDOM/ShadowDOM.js"></script>
+  <script src="../src/HTMLImports/HTMLImports.js"></script>
+
   <script src="tools/mocha/mocha.js"></script>
   <script src="tools/chai/chai.js"></script>
   <script src="tools/mocha-htmltest.js"></script>
-
-  <script src="../src/ShadowDOM/ShadowDOM.js"></script>
-  
+ 
 </head>
 <body>
 
@@ -32,6 +33,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   </script>
 
   <script src="ShadowDOM/test.main.js"></script>
+  <script src="HTMLImports/tests.js"></script>
 
   <script>
     mocha.run();

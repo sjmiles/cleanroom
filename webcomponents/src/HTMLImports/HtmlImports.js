@@ -9,7 +9,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 (function() {
   
-var thisFile = 'htmlimports.debug.js';
+var thisFile = 'HTMLImports.js';
 
 var modules = [
   '../WeakMap/WeakMap.js',

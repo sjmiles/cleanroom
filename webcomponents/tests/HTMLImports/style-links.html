@@ -1,49 +1,36 @@
 <!doctype html>
 <html>
 <head>
-
+  
   <title>Style Links Test</title>
   
   <script src="../tools/htmltest.js"></script>
   <script src="../tools/chai/chai.js"></script>
-  
-  <script src="../../HTMLImports/htmlimports.debug.js"></script>
+
+  <script src="../../src/HTMLImports/HTMLImports.js"></script>
   
   <link rel="import" href="imports/style-links-import.html">
   
 </head>
 <body>
-
+  
   <script>
     addEventListener('HTMLImportsLoaded', function() {
-      
+
       function checkLinksForContent(root) {
         var links = root.querySelectorAll('link');
         Array.prototype.forEach.call(links, function(link) {
           chai.assert.ok(link.__resource, 'style link loaded', link);
         })
       }
-      
-      setTimeout(function() {
+
+      // TODO(sjmiles): why timeout?
+      //setTimeout(function() {
         checkLinksForContent(document.body);
-        
-        /*
-        var imp = document.head.querySelector('link[rel=import]');
-        chai.assert.ok(imp.content, 'import has content');
-        
-        var styleLink = document.querySelector('link[rel=stylesheet]');
-        chai.assert.isUndefined(styleLink.__resource);
-        
-        checkLinksForContent(imp.content.querySelector('body'));
-        
-        chai.assert.equal(document.styleSheets.length, 2);
-        */
-        
         done();
-      }, 50);
-      
+      //}, 50);
     });
   </script>
-
+  
 </body>
 </html>
