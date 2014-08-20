@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+
+  <meta charset="utf-8">
+
+  <!-- Always force latest IE rendering engine (even in intranet) & Chrome Frame 
+       Remove this if you use the .htaccess -->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+  <title>thing</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+</head>
+<body>
+
+<script>
+
+  UberStore = function() {
+    this.store = [];
+    this.watchers = [];
+  };
+  UberStore.prototype = {
+    add: function(value) {
+      return this.store.push(value);
+    },
+    remove: function(key) {
+      this.store[key] = undefined;
+    },
+    set: function(key, value) {
+      var old = this.store[key];
+      if (old !== value) {
+        this.store[key] = value;
+        var watchers = this.watchers[key];
+        if (watchers) {
+          watchers.forEach(function(w) {
+            w(value, old);
+          });
+        }
+      }
+    },
+    get: function(key) {
+      return this.store[key];
+    },
+    watch: function(key, watcher) {
+      var watchers = this.watchers[key];
+      if (!watchers) {
+        watchers = this.watchers[key] = [];
+      }
+      watchers.push(watcher);
+    }
+  };
+  uberStore = new UberStore();
+  
+  Base = function() {
+    this._map = {};
+  };
+  Base.prototype = {
+    publishProperty: function(name) {
+      this._map[name] = uberStore.add(null);
+      Object.defineProperty(this, name, {
+        get: function() {
+          return uberStore.get(this._map[name]);
+        },
+        set: function(value) {
+          return uberStore.set(this._map[name], value);
+        }
+      });      
+    },
+    bindProperty: function(name, targetName, target) {
+      uberStore.remove(this._map[name]);
+      this._map[name] = target._map[targetName];
+    },
+    watch: function(name, notify) {
+      uberStore.watch(this._map[name], notify);
+    }
+  };
+ 
+  foo = new Base();
+  foo.publishProperty('foo');
+  foo.foo = 3;
+  bar = new Base();
+  bar.publishProperty('bar');
+  bar.bar = 6;
+  console.log('foo.foo = %d, bar.bar = %d', foo.foo, bar.bar);
+
+  console.log('> bind bar.bar -> foo.foo');  
+  bar.bindProperty('bar', 'foo', foo);
+  console.log('foo.foo = %d, bar.bar = %d', foo.foo, bar.bar);
+  
+  bar.watch('bar', function(value, old, name) {
+    console.log('[%s] changed: %d -> %d', 'bar', old, value)
+  });
+  console.log('> bar.bar = 9');
+  bar.bar = 9;
+  console.log('foo.foo = %d, bar.bar = %d', foo.foo, bar.bar);
+  
+  console.log('> foo.foo = -7');
+  foo.foo = -7;
+  console.log('foo.foo = %d, bar.bar = %d', foo.foo, bar.bar);
+</script>
+
+</body>
+</html>
