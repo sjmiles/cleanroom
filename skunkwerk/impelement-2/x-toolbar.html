@@ -1,0 +1,27 @@
+<link rel="import" href="layout.html">
+
+<x-style name="x-toolbar">
+  :host {
+    display: block;
+    background-color: lightblue;
+    height: 64px;
+  }
+  ::content > * {
+    margin-left: 4px;
+  }
+</x-style>
+
+<script>
+  register({
+    name: 'x-toolbar',
+    created: function() {
+      this.createShadow();
+      this.root.appendChild(document.createElement('content'));
+      this.setAttribute('horizontal', '');      
+      this.setAttribute('layout', '');
+      this.setAttribute('center', '');      
+      //this.setAttribute('flex', '');
+      //this.setAttribute('none', '');
+    }
+  })
+</script>

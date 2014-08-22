@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>impelement</title>
+
+  <link rel="import" href="lib.html">
+  <link rel="import" href="layout.html">
+
+  <link rel="import" href="x-toolbar.html">
+  <link rel="import" href="x-icon.html">
+
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+    }
+    x-toolbar {
+      box-shadow: 0px 6px 23px -6px rgba(0,0,0,0.75);
+    }
+  </style>
+
+  <svg style="display: none;"><defs>
+  <g id="apps"><path d="M4,8h4V4H4V8z M10,20h4v-4h-4V20z M4,20h4v-4H4V20z M4,14h4v-4H4V14z M10,14h4v-4h-4V14z M16,4v4h4V4H16z M10,8h4V4h-4V8z M16,14h4v-4h-4V14z M16,20h4v-4h-4V20z"/></g>
+  </defs></svg>
+ 
+</head>
+<body xfullbleed vertical layout>
+
+<template id="bar">
+  <x-toolbar>
+    <x-icon></x-icon>
+    <span>Toolbar</span>
+    <x-icon></x-icon>
+    <span>Tool</span>
+    <x-icon></x-icon>
+    <span>Bar</span>
+    <x-icon></x-icon>
+    <span>Tool</span>
+    <x-icon></x-icon>
+    <span>Bar</span>
+    <x-icon></x-icon>
+    <span>Tool</span>
+    <x-icon></x-icon>
+    <span>Bar</span>
+  </x-toolbar>
+</template>
+
+<script>
+  var bar = document.querySelector("#bar");
+  document.body.appendChild(stamp(bar));
+
+  if (0) {
+    console.profile();
+    for (var i=0; i<50; i++) {
+      var span = document.createElement('span');
+      span.textContent = 'Toolbar';
+      var tb = document.createElement('x-toolbar');
+      tb.appendChild(span);
+      var frag = document.createDocumentFragment();
+      frag.appendChild(tb);
+      document.body.appendChild(frag);
+    }
+    console.profileEnd();
+  }
+    
+  if (1) {
+    console.profile();
+    for (var i=0; i<100; i++) {
+      document.body.appendChild(stamp(bar));
+    }
+    console.profileEnd();
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>impelement</title>
+
+  <link rel="import" href="lib.html">
+  
+</head>
+<body>
+
+<x-foo>Hello World</x-foo>
+
+<x-style name="x-foo">
+  :host {
+    display: block;
+    font-family: sans-serif;
+  }
+</x-style>
+
+<script>
+  register({
+    name: 'x-foo',
+    created: function() {
+      this.root = this.createShadowRoot();
+      this.root.appendChild(document.createElement('content'));
+    }
+  });
+</script>
+
+<script>
+  if (1) {
+    console.profile();
+    for (var i=0; i<200; i++) {
+      var e = document.createElement('x-foo');
+      e.textContent = i;
+      document.body.appendChild(e);
+    }  
+    console.profileEnd();
+  }
+</script>
+
+</body>
+</html>

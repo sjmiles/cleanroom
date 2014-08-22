@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>impelement</title>
+
+</head>
+<body>
+
+<x-foo>Hello World</x-foo>
+
+<script>
+  function register(prototype) {
+    prototype.__proto__ = HTMLElement.prototype;
+    document.registerElement(prototype.name, {prototype: prototype});
+  }
+  register({
+    name: 'x-foo',
+    createdCallback: function() {
+      this.root = this.createShadowRoot();
+      this.root.appendChild(document.createElement('content'));
+    }
+  });
+</script>
+
+</body>
+</html>

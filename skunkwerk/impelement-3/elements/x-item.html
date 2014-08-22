@@ -1,0 +1,29 @@
+<x-style name="x-item">
+  :host {
+    display: block;
+    font-size: 0.7em;
+    white-space: nowrap;
+  }
+  from, date {
+    margin: 0 1em;
+  }
+  blurb {
+    color: gray;
+  }
+</x-style>
+
+<template name="x-item"><x-icon></x-icon><x-icon></x-icon><x-icon></x-icon><from flex>User User (3)</from><subject flex two>Phasellus mollis tellus in nibh auctor feugiat.</subject><blurb flex three>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</blurb><x-icon></x-icon><date>6:09pm</date></template>
+
+<script>
+(function() {
+  register({
+    name: 'x-item',
+    attrs: 'horizontal center layout',
+    created: function() {
+      this.createShadow();
+      this.root.appendChild(stamp(template));
+    }
+  })
+  var template = Sugar.getTemplate('x-item');
+})();
+</script>
