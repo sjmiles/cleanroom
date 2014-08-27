@@ -1,0 +1,40 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<template>
+
+  <style>
+    :host {
+      display: block;
+    }
+    x-toolbar {
+      background-color: #f1f1f1;
+      font-size: 0.8em;
+      padding-right: 32px;
+      padding-left: 24px;
+    }
+    logospan {
+      width: 200px;
+    }
+  </style>
+
+  <x-toolbar>
+    <logospan style="width:200px">
+      <img src="assets/logo.png">
+    </logospan>
+    <x-search-input flex seven></x-search-input>
+    <span flex></span>
+    <span>+User</span>
+    <x-icon icon="apps"></x-icon>
+    <x-icon icon="archive"></x-icon>
+    <button>Share</button>
+    <img avatar src="assets/fu.jpg">
+  </x-toolbar>
+
+</template>
+<script>
+
+  Polymer({
+    name: 'x-appbar'
+  });
+
+</script>

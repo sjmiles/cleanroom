@@ -1,0 +1,33 @@
+<polymer-element name="x-item" horizontal center layout attributes="item">
+<template><style>
+    :host {
+      display: block;
+      font-size: 0.7em;
+      white-space: nowrap;
+    }
+    from, date {
+      margin: 0 1em;
+    }
+    date {
+      text-align: right;
+      width: 6em;
+    }
+    blurb {
+      color: gray;
+    }
+  </style><core-icon icon="apps"></core-icon><core-icon icon="apps"></core-icon><core-icon icon="apps"></core-icon><from flex>{{item.from}} {{item.count}}</from><subject flex two>{{item.subject}}</subject><blurb flex three>{{item.blurb}}</blurb><core-icon icon="apps"></core-icon><date>{{item.date}}</date></template>
+<script>
+
+  Polymer({
+    item: {
+      from: 'Sender User',
+      count: '(3)',
+      subject: 'Phasellus mollis tellus in nibh auctor feugiat.',
+      blurb: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+      date: '6:09pm'
+    }
+  });
+  
+</script>
+</polymer-element>
+

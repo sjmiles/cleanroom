@@ -1,0 +1,109 @@
+<!doctype html>
+<html>
+<head>
+
+  <script>
+    //console.timeline();
+    var time = Date.now();
+  </script>
+
+  <meta charset="utf-8">
+  <title>app</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="import" href="elements.html">
+  <link rel="import" href="assets/icons.html">
+  <link rel="import" href="assets/data.html">
+  <link rel="stylesheet" href="app.css">
+
+</head>
+<body fullbleed vertical layout>
+
+<!-- apps bar -->
+
+<x-toolbar id="apps">
+  <span style="width:200px">
+    <img src="assets/logo.png">
+  </span>
+  <x-search-input flex seven></x-search-input>
+  <span flex></span>
+  <span>+User</span>
+  <x-icon icon="apps"></x-icon>
+  <x-icon icon="archive"></x-icon>
+  <button>Share</button>
+  <img src="assets/fu.jpg" class="avatar">
+</x-toolbar>
+
+<!-- mail bar -->
+
+<x-toolbar id="mail">
+  <span style="width:200px" horizontal layout>
+    <x-drop-button class="task"><span>Mail</span></x-drop-button>
+  </span>
+  <x-drop-button><x-icon icon="box"></x-icon></x-drop-button>
+  <x-icon-button icon="apps"></x-icon-button>
+  <x-drop-button>More</x-drop-button>
+
+  <span flex></span>
+  <span style="font-size: 0.6em"><b>1-100</b> of <b>23,423</b></span>
+  <button style="margin-right: 0;">&lt;</button><button style="margin: 0;">&gt;</button>
+  &nbsp;&nbsp;
+  <x-drop-button><x-icon icon="apps"></x-icon></x-drop-button>
+</x-toolbar>
+
+<!-- compose bar -->
+
+<x-toolbar id="stuff">
+  <span style="width:200px" horizontal layout>
+    <button id="compose">COMPOSE</button>
+  </span>
+  <x-ad flex></x-ad>
+</x-toolbar>
+
+<!-- columns -->
+<div flex horizontal layout style="padding-left: 8px;">
+  <!-- left column -->
+  <div style="width: 216px; padding-right: 8px;" vertical layout>
+
+    <!-- label list -->
+    <x-repeater id="labels" flex scroll kind="x-label"></x-repeater>
+
+    <!-- contact bar -->
+    <x-toolbar id="user" style="padding-left: 0px;">
+      <img src="assets/fu.jpg" class="avatar" style="margin-left: 0;"></img>
+      <span>User</span>
+      <x-icon icon="archive"></x-icon>
+      <span flex></span>
+      <x-icon-button icon="search"></x-icon-button>
+    </x-toolbar>
+    <!-- contact list -->
+    <x-repeater id="contacts" flex scroll kind="x-label"></x-repeater>
+    
+  </div>
+
+  <!-- right column -->   
+  <!-- mail list -->
+  <x-repeater id="list" kind="x-item" flex scroll style="padding-left: 8px;"></x-repeater>
+  
+</div>
+
+<script>
+  var $ = document.querySelector.bind(document);
+  $('#list').items = data.items;
+  $('#labels').items = data.items.slice(0, 10);
+  $('#contacts').items = data.items.slice(20, 35);
+</script>
+
+<script>
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      time = Date.now() - time;
+      console.log('From start to after first paint (?): ' + time + 'ms');
+      document.title = time + 'ms';
+    });
+  });
+</script>
+
+</body>
+</html>

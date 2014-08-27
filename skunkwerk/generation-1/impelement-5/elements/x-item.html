@@ -1,0 +1,45 @@
+<template name="x-item">
+  <style>
+    :host {
+      display: block;
+      font-size: 0.7em;
+      white-space: nowrap;
+    }
+    from, date {
+      margin: 0 1em;
+    }
+    date {
+      text-align: right;
+      width: 6em;
+    }
+    blurb {
+      color: gray;
+    }
+  </style>
+  <x-icon icon="@icon"></x-icon><x-icon></x-icon><x-icon></x-icon><from flex>[[item.from]] [[item.count]]</from><subject flex two>[[item.subject]]</subject><blurb flex three>[[item.blurb]]</blurb><x-icon></x-icon><date>[[item.date]]</date>
+</template>
+
+<script>
+  register({
+    name: 'x-item',
+    attrs: 'horizontal center layout',
+    template: Sugar.getTemplate('x-item'),
+    item: {
+      from: 'Sender User',
+      count: '(3)',
+      subject: 'Phasellus mollis tellus in nibh auctor feugiat.',
+      blurb: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+      date: '6:09pm'
+    },
+    props: [
+      'item'
+    ],
+    created: function() {
+      this.createShadow();
+    },
+    stamp: function() {
+      this.icon = this.item.icon;
+      this.root.appendChild(this.template.createInstance(this));
+    }
+  });
+</script>

@@ -1,0 +1,54 @@
+<link rel="import" href="register.html">
+<link rel="import" href="layout.html">
+
+<script>
+  Object.defineProperty(window, 'import', {
+    enumerable: true,
+    configurable: true,
+    get: function() {
+      return document.currentScript.ownerDocument;
+    }
+  });
+  //
+  var attributes = function(node, attr$) {
+    attr$.split(' ').forEach(function(a) {
+      node.setAttribute(a, '');
+    });
+  };
+  //
+  Base = {
+    createdCallback: function() {
+      this.createRoot();
+      this.stampTemplate();
+      this.installAttributes();
+      this.created();
+    },
+    createRoot: function(){
+      if (this._template) {
+        this.root = this.createShadowRoot();
+      } else {
+        this.root = this;
+      }
+    },
+    stampTemplate: function() {
+      if (this._template) {
+        this.root.appendChild(document.importNode(this._template.content, true));
+      }
+    },
+    installAttributes: function() {
+      if (this._attributes) {
+        attributes(this, this._attributes);
+      }
+    },
+    created: function() {
+    }
+  };
+  Base.__proto__ = HTMLElement.prototype;
+  //
+  var Polymer = function(prototype) {
+    prototype.__proto__ = Base;
+    //prototype._document = window.import;
+    prototype._template = window.import.querySelector('template');
+    document.registerElement(prototype.name, {prototype: prototype});
+  }
+</script>

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <script>
+    //console.time();
+    console.profile();
+    //console.timeline();
+  </script>
+  
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>impelement</title>
+  
+  <script src="components/TemplateBinding/load.js"></script>
+ 
+</head>
+<body fullbleed vertical layout>
+
+<template bind>
+  Mob{{dob}}bob
+</template>
+
+<script>
+  document.querySelector('template').model = { dob: 'dobbly' };
+  //console.timeEnd();
+  console.profileEnd();
+  //console.timelineEnd();
+</script>
+
+</body>
+</html>

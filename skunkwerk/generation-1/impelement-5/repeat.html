@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <script>
+    //console.time();
+    console.profile();
+    //console.timeline();
+  </script>
+  
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>repeat</title>
+
+  <link rel="import" href="components/binding/binding.html">
+  <link rel="import" href="lib/lib.html">
+  
+  <link rel="import" href="elements/x-toolbar.html">
+  <link rel="import" href="elements/x-icon.html">
+  <link rel="import" href="elements/x-item.html">
+
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+    }
+    x-toolbar {
+      box-shadow: 0px 6px 23px -6px rgba(0,0,0,0.75);
+    }
+    #content {
+      overflow: auto;
+    }
+  </style>
+
+  <svg style="display: none;"><defs>
+  <g id="apps"><path d="M4,8h4V4H4V8z M10,20h4v-4h-4V20z M4,20h4v-4H4V20z M4,14h4v-4H4V14z M10,14h4v-4h-4V14z M16,4v4h4V4H16z M10,8h4V4h-4V8z M16,14h4v-4h-4V14z M16,20h4v-4h-4V20z"/></g>
+  <g id="archive"><path d="M20.5,5.2l-1.4-1.7C18.9,3.2,18.5,3,18,3H6C5.5,3,5.1,3.2,4.8,3.5L3.5,5.2C3.2,5.6,3,6,3,6.5V19c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V6.5C21,6,20.8,5.6,20.5,5.2z M12,17.5L6.5,12H10v-2h4v2h3.5L12,17.5z M5.1,5l0.8-1h12l0.9,1H5.1z"/></g>
+  <g id="check-box-outline-blank"><path d="M19,5v14L5,19V5H19 M19,3H5C3.9,3,3,3.9,3,5v14c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V5C21,3.9,20.1,3,19,3L19,3z"/></g>
+  </defs></svg>
+ 
+</head>
+<body fullbleed vertical layout>
+
+<x-toolbar>
+  <x-icon></x-icon>
+  <span>Toolbar</span>
+  <x-icon></x-icon>
+  <span>Tool</span>
+  <x-icon></x-icon>
+  <span>Bar</span>
+  <x-icon></x-icon>
+  <span>Tool</span>
+  <x-icon></x-icon>
+  <span>Bar</span>
+  <x-icon></x-icon>
+  <span>Tool</span>
+  <x-icon></x-icon>
+  <span>Bar</span>
+</x-toolbar>
+
+<div id="content" flex>
+  <template repeat>
+    <x-item item="@"></x-item>
+  </template>
+</div>
+
+<script>
+  if (1) {
+    var n = 1000;
+    //
+    var items = [];
+    for (var i=0; i<n; i++) {
+      items.push({
+        icon: 'box',
+        from: rand(names),
+        count: '(' + irand(5) + ')',
+        subject: rand(blurbs).slice(0, 48), 
+        blurb: rand(blurbs).slice(0, 48), 
+        date: new Date(Date.now() + irand(1e10) - irand(1e5)).toLocaleDateString()
+      });
+    }
+    //
+    document.querySelector("#content template").model = items;
+  }
+</script>
+
+<script>
+  //console.timeEnd();
+  console.profileEnd();
+  //console.timelineEnd();
+</script>
+
+</body>
+</html>

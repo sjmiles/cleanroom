@@ -1,0 +1,65 @@
+<template>
+
+  <style>
+    :host {
+      display: block;
+      font-size: 0.7em;
+      white-space: nowrap;
+    }
+    from, date {
+      margin: 0 1em;
+    }
+    date {
+      text-align: right;
+      width: 6em;
+    }
+    blurb {
+      color: gray;
+    }
+  </style>
+
+  <x-icon icon="box"></x-icon><x-icon icon="apps"></x-icon><x-icon icon="archive"></x-icon>
+  <from flex></from>
+  <span flex five><subject></subject> - <blurb></blurb></span>
+  <x-icon icon="apps"></x-icon>
+  <date></date>
+
+</template>
+
+<script>
+(function() {
+
+  var template = document.currentScript.ownerDocument.querySelector('template');
+
+  register({
+    name: 'x-item',
+    createdCallback: function() {
+      this.root = this.createShadowRoot();
+      this.root.appendChild(document.importNode(template.content, true));
+      'horizontal center layout'.split(' ').forEach(function(a) {
+        this.setAttribute(a, '');
+      }, this);
+      this.findNodes();
+    },
+    findNodes: function() {
+      var $ = this.root.querySelector.bind(this.root);
+      this.$ = {
+        from: $('from'),
+        subject: $('subject'),
+        blurb: $('blurb'),
+        date: $('date')
+      }
+    },
+    setItem: function(item) {
+      this.$.from.textContent = item.from + ' ' + item.count;
+      this.$.subject.textContent = item.subject;
+      this.$.blurb.textContent = item.blurb;
+      this.$.date.textContent = item.date;
+    },
+    bound: function() {
+      this.setItem(this.templateInstance.model);
+    }
+  });
+
+})();
+</script>

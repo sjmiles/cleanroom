@@ -1,0 +1,46 @@
+<x-style name="x-item">
+  :host {
+    display: block;
+    font-size: 0.7em;
+    white-space: nowrap;
+  }
+  from, date {
+    margin: 0 1em;
+  }
+  date {
+    text-align: right;
+    width: 6em;
+  }
+  blurb {
+    color: gray;
+  }
+</x-style>
+
+<template name="x-item"><x-icon></x-icon><x-icon></x-icon><x-icon></x-icon><from flex>{{item.from}} {{item.count}}</from><subject flex two>{{item.subject}}</subject><blurb flex three>{{item.blurb}}</blurb><x-icon></x-icon><date>{{item.date}}</date></template>
+
+<script>
+(function() {
+  register({
+    name: 'x-item',
+    attrs: 'horizontal center layout',
+    item: {
+      from: 'Sender User',
+      count: '(3)',
+      subject: 'Phasellus mollis tellus in nibh auctor feugiat.',
+      blurb: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+      date: '6:09pm'
+    },
+    created: function() {
+      this.createShadow();
+    },
+    stamp: function() {
+      this.root.appendChild(template.createInstance(this));
+    },
+    bound: function() {
+      this.item = this.templateInstance.model;
+      this.stamp();
+    }
+  })
+  var template = Sugar.getTemplate('x-item');
+})();
+</script>

@@ -1,0 +1,26 @@
+<template>
+  <content></content>
+  <x-icon icon="drop" size="8"></x-icon>
+</template>
+<script>
+(function() {
+
+  var template = document.currentScript.ownerDocument.querySelector('template');
+
+  register({
+    name: 'x-drop-button',
+    createdCallback: function() {
+      this.root = this.createShadowRoot();
+      this.root.appendChild(document.importNode(template.content, true));
+    },
+    attributeChanged: function(name) {
+      switch (name) {
+        case 'active':
+          this.classList.toggle('selected', this.hasAttribute('active'));
+          break;
+      }
+    }
+  });
+
+})();
+</script>

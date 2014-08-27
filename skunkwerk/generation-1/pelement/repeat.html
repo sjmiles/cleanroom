@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <script>
+    //console.time();
+    //console.profile();
+    //console.timeline();
+  </script>
+  
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>repeat</title>
+
+  <script src="components/platform/platform.js"></script>
+  <link rel="import" href="components/core-icons/core-icons.html">
+  <link rel="import" href="components/core-toolbar/core-toolbar.html">
+  <link rel="import" href="elements/x-item.html">
+  <link rel="import" href="lib/lib.html">
+  
+
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+    }
+    #content {
+      overflow: auto;
+    }
+  </style>
+
+</head>
+<body fullbleed vertical layout>
+
+<core-toolbar>
+  <core-icon icon="apps"></core-icon>
+  <span>Toolbar</span>
+  <core-icon icon="apps"></core-icon>
+  <span>Tool</span>
+  <core-icon icon="apps"></core-icon>
+  <span>Bar</span>
+  <core-icon icon="apps"></core-icon>
+  <span>Tool</span>
+  <core-icon icon="apps"></core-icon>
+  <span>Bar</span>
+  <core-icon icon="apps"></core-icon>
+  <span>Tool</span>
+  <core-icon icon="apps"></core-icon>
+  <span>Bar</span>
+</core-toolbar>
+
+<div id="content" flex>
+  <template repeat>
+    <x-item item="{{}}"></x-item>
+  </template>
+</div>
+
+<script>
+  if (1) {
+    var n = 1000;
+    //
+    var items = [];
+    for (var i=0; i<n; i++) {
+      items.push({
+        from: rand(names),
+        count: '(' + irand(5) + ')',
+        subject: rand(blurbs).slice(0, 48), 
+        blurb: rand(blurbs).slice(0, 48), 
+        date: new Date(Date.now() + irand(1e10) - irand(1e5)).toLocaleDateString()
+      });
+    }
+    //
+    addEventListener('polymer-ready', function() {
+      document.querySelector("#content template").model = items;
+      //console.timeEnd();
+      //console.profileEnd();
+      //console.timelineEnd();
+    });
+  }
+</script>
+
+</body>
+</html>

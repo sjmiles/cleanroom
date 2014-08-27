@@ -1,0 +1,18 @@
+<script>
+  //var icon = document.createElement('span');
+  //
+  var icon = cloneIcon('#apps');
+  //
+  //var icon = document.createElement('img');
+  //icon.src = 'icon.png';
+  //
+  register({
+    name: 'x-icon',
+    created: function() {
+      this.root = this;
+      // costs about 0.06ms per element on desktop chrome, 13% per element
+      //this.createShadow();
+      this.root.appendChild(icon.cloneNode(true));
+    }
+  })
+</script>

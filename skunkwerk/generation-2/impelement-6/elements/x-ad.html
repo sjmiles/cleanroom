@@ -1,0 +1,48 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<template>
+  <style>
+    :host {
+      display: block;
+      border: 1px solid #e1e1e1; 
+      background-color: whitesmoke;
+      font-size: 0.6em;
+    }
+    ad {
+      background-color: #edb802;
+      color: white;
+      border-radius: 2px;
+      padding: 2px;
+      margin: 6px;
+    }
+    x-icon {
+      height: 16px;
+      margin-right: 6px;
+    }
+    copy {
+    }
+  </style>
+
+  <ad>Ad</ad>
+  <copy>Python Developers in SF - hired.com/Python - Apply Once & Get 5-15 Job Offers, The Marketplace for Python Talent!</copy>
+  <span flex></span>
+  <x-icon icon="info-outline"></x-icon>
+
+</template>
+
+<script>
+(function() {
+
+  var template = window.import.querySelector('template');
+
+  register({
+    name: 'x-ad',
+    createdCallback: function() {
+      this.root = this.createShadowRoot();
+      this.root.appendChild(document.importNode(template.content, true));
+      attributes(this, 'horizontal center layout');
+    }
+  });
+
+})();
+</script>

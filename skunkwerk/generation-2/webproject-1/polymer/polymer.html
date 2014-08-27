@@ -1,0 +1,12 @@
+<link rel="import" href="register.html">
+<link rel="import" href="layout.html">
+
+<script>
+  Object.defineProperty(window, 'import', {
+    enumerable: true,
+    configurable: true,
+    get: function() {
+      return document.currentScript.ownerDocument;
+    }
+  });
+</script>

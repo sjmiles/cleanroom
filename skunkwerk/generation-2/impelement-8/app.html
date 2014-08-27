@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+<head>
+
+  <script src="perf.js"></script>
+  <script>
+    console.perf();
+  </script>
+
+  <meta charset="utf-8">
+  <title>app</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="import" href="elements.html">
+  <link rel="import" href="assets/icons.html">
+  <link rel="import" href="assets/data.html">
+  <link rel="stylesheet" href="app.css">
+
+</head>
+<body fullbleed vertical layout>
+  
+  <!-- appbar -->
+  <x-appbar></x-appbar>
+  
+  <!-- other bars -->
+  <div id="otherBars">
+    <x-mailbar></x-mailbar>
+    <x-composebar></x-composebar>
+  </div>
+  
+  <!-- columns -->
+  <div id="columns" flex horizontal layout>
+    
+    <!-- left column -->
+    <div id="leftColumn" vertical layout>
+      <!-- label list -->
+      <x-repeater id="labels" flex scroll kind="x-label"></x-repeater>
+      <!-- contact bar -->
+      <x-contactbar></x-contactbar>
+      <!-- contact list -->
+      <x-repeater id="contacts" flex scroll kind="x-label"></x-repeater>
+    </div>
+    
+    <!-- right column -->   
+    <x-repeater id="list" kind="x-item" flex scroll></x-repeater>
+  
+  </div>
+  
+  <!-- data -->
+  <script>
+    var $ = document.querySelector.bind(document);
+    $('#list').items = data.items;
+    $('#labels').items = data.items.slice(0, 10);
+    $('#contacts').items = data.items.slice(20, 35);
+  </script>
+  
+  <!-- perf measure -->
+  <script>
+    console.perfEnd();
+  </script>
+  
+</body>
+</html>

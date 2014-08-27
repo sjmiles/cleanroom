@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+
+  <meta charset="utf-8">
+
+  <!-- 
+    Always force latest IE rendering engine (even in intranet) & Chrome Frame. 
+    Remove this if you use the .htaccess 
+  -->
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+  <title>thing</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+</head>
+<body>
+
+<!--
+  
+  Perf Notes for Quickie Tests I Did
+  ... ack that it's bad these are not reproduceable, but mostly I'm just confirming known info
+  ... tests were run using jsperf on Windows 8/i7/Chrome Stable (no polyfills or libs)
+  
+  divs vs (trivial) x-foo: almost no difference
+  divs vs x-foo with createdCallback: 44% slower (hitting JS is known to have this cost)
+  divs vs x-foo with createCallback creating shadowRoot: 77% slower
+  
+-->
+
+<x-foo></x-foo>
+
+<script>
+  register = function(prototype) {
+    var base = Object.create(HTMLElement.prototype);
+    prototype.__proto__ = base;
+    document.registerElement(prototype.name, {prototype: prototype})
+  }
+  register({
+    name: 'x-foo',
+    createdCallback: function() {
+      this.innerHTML = 'Hello World';
+    }
+  });
+</script>
+
+</body>
+</html>

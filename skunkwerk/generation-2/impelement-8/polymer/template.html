@@ -1,0 +1,19 @@
+<link rel="import" href="register.html">
+<link rel="import" href="layout.html">
+
+<script>
+  var instanceTemplate = function(template) {
+    var frag = document.createDocumentFragment();
+    var root = template.content;
+    stamp(frag, root);
+    return frag;
+  };
+
+  var stamp = function(target, content) {
+    for (var i=0, l=content.childCount || 0; i<l; i++) {
+      var src = content.children[i];
+      var node = target.appendChild(src.cloneNode(false))
+      stamp(node, src);
+    }
+  };
+</script>

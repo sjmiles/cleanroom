@@ -1,0 +1,38 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<template>
+  <style>
+    :host {
+      display: block;
+      background-color: lightblue;
+      height: 64px;
+      font-size: 1.3em;
+      padding-left: 6px;
+      padding-right: 8px;
+      cursor: pointer;
+    }
+    ::content > * {
+      margin-left: 8px;
+    }
+  </style>
+  <content></content>
+</template>
+
+<script>
+(function() {
+
+  var template = document.currentScript.ownerDocument.querySelector('template');
+
+  register({
+    name: 'x-toolbar',
+    createdCallback: function() {
+      this.root = this.createShadowRoot();
+      this.root.appendChild(document.importNode(template.content, true));
+      'horizontal center layout'.split(' ').forEach(function(a) {
+        this.setAttribute(a, '');
+      }, this);
+    }
+  });
+
+})();
+</script>

@@ -1,0 +1,26 @@
+<script>
+  //var icon = document.createElement('span');
+  //
+  var icons = {
+    apps: cloneIcon('#apps'),
+    archive: cloneIcon('#archive'),
+    box: cloneIcon('#check-box-outline-blank')
+  };
+  //
+  //var icon = document.createElement('img');
+  //icon.src = 'icon.png';
+  //
+  register({
+    name: 'x-icon',
+    props: [
+      'icon'
+    ],
+    icon: 'apps',
+    stamp: function() {
+      var icon = icons[this.icon];
+      if (icon) {
+        this.root.appendChild(icon.cloneNode(true));
+      }
+    }
+  });
+</script>

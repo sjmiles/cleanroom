@@ -1,0 +1,38 @@
+<template>
+
+  <style>
+    :host {
+      display: block;
+      font-size: 0.8em;
+      white-space: nowrap;
+      margin: 6px 0;
+      cursor: pointer;
+    }
+  </style>
+  
+</template>
+
+<script>
+(function() {
+
+  var template = document.currentScript.ownerDocument.querySelector('template');
+
+  register({
+    name: 'x-label',
+    createdCallback: function() {
+      this.root = this.createShadowRoot();
+      this.root.appendChild(document.importNode(template.content, true));
+      this.text = document.createTextNode('');
+      this.root.appendChild(this.text);
+    },
+    setItem: function(item) {
+      this.text.textContent = item.from + ' ' + item.count;
+      this.style.fontWeight = item.count ? 'bold' : '';
+    },
+    bound: function() {
+      this.setItem(this.templateInstance.model);
+    }
+  });
+
+})();
+</script>

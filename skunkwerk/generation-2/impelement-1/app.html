@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+<head>
+
+  <script>
+    console.timeline();
+    var time = Date.now();
+  </script>
+
+  <meta charset="utf-8">
+  <title>app</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="import" href="icons.html">
+
+  <link rel="import" href="elements/x-toolbar.html">
+  <link rel="import" href="elements/x-icon.html">
+  <link rel="import" href="elements/x-item.html">
+
+  <style>
+    body {
+      font-family: sans-serif;
+    }
+  </style>
+
+</head>
+<body fullbleed>
+
+<x-toolbar><x-icon icon="apps"></x-icon><span>Toolbar</span><x-icon icon="archive"></x-icon><x-icon icon="archive"></x-icon><x-icon icon="archive"></x-icon><x-icon icon="archive"></x-icon><x-icon icon="archive"></x-icon><span flex></span><x-icon icon="box"></x-icon></x-toolbar>
+
+<x-item></x-item>
+
+<script>
+  document.querySelector('x-item').setItem({
+    from: 'Sender User',
+    count: '(3)',
+    subject: 'Phasellus mollis tellus in nibh auctor feugiat.',
+    blurb: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+    date: '6:09pm'
+  });
+</script>
+
+<script>
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      time = Date.now() - time;
+      console.log('Time to paint (?): ' + time + 'ms');
+      document.title = time;
+    });
+  });
+</script>
+</body>
+</html>

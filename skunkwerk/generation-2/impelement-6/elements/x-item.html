@@ -1,0 +1,76 @@
+<template>
+
+  <style>
+    :host {
+      display: block;
+      font-size: 0.8em;
+      white-space: nowrap;
+      cursor: pointer;
+      border-bottom: 1px solid #f5f5f5;
+      padding: 4px 0;
+    }
+    :host > * {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    from, date {
+      margin: 0 1em;
+    }
+    date {
+      text-align: right;
+      width: 6em;
+    }
+    blurb {
+      color: gray;
+    }
+    span {
+      margin-right: 8px;
+    }
+  </style>
+
+  <x-icon icon="box"></x-icon><x-icon icon="apps"></x-icon><x-icon icon="archive"></x-icon>
+  <from flex></from>
+  <span flex five><subject></subject> - <blurb></blurb></span>
+  <x-icon icon="apps"></x-icon>
+  <date></date>
+
+</template>
+
+<script>
+(function() {
+
+  var template = document.currentScript.ownerDocument.querySelector('template');
+
+  register({
+    name: 'x-item',
+    createdCallback: function() {
+      this.root = this.createShadowRoot();
+      this.root.appendChild(document.importNode(template.content, true));
+      'horizontal center layout'.split(' ').forEach(function(a) {
+        this.setAttribute(a, '');
+      }, this);
+      this.findNodes();
+    },
+    findNodes: function() {
+      var $ = this.root.querySelector.bind(this.root);
+      this.$ = {
+        from: $('from'),
+        subject: $('subject'),
+        blurb: $('blurb'),
+        date: $('date')
+      }
+    },
+    setItem: function(item) {
+      this.$.from.textContent = item.from + ' ' + item.count;
+      this.$.subject.textContent = item.subject;
+      this.$.blurb.textContent = item.blurb;
+      this.$.date.textContent = item.date;
+      this.style.fontWeight = Date.parse(item.date) + 20*24*60*60*1000 < Date.now() ? '' : 'bold'; 
+    },
+    bound: function() {
+      this.setItem(this.templateInstance.model);
+    }
+  });
+
+})();
+</script>

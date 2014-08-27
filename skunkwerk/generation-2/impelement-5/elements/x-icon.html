@@ -1,0 +1,41 @@
+<script>
+(function() {
+
+  register({
+    name: 'x-icon',
+    _size: 24,
+    createdCallback: function() {
+      this.root = this;
+      this.style.display = 'inline-block';
+      this.style.verticalAlign = 'middle';
+      this.style.fill = 'currentColor';
+      this.attributeChanged('icon');
+      this.attributeChanged('size');
+    },
+    attributeChanged: function(name) {
+      if (name === 'icon') {
+        this.icon = this.getAttribute('icon');
+      }
+      if (name === 'size') {
+        this.size = Number(this.getAttribute('size')) || this._size;
+      }
+    },
+    set size(size) {
+      if (this.iconNode) {
+        sizeIcon(this.iconNode, size);
+      }
+      this.style.width = this.style.heigth = size + 'px';
+      this._size = size;
+    },
+    set icon(icon) {
+      this.root.textContent = '';
+      this.iconNode = icons[icon];
+      if (this.iconNode) {
+        sizeIcon(this.iconNode, this._size);
+        this.root.appendChild(this.iconNode.cloneNode(true));
+      }
+    }
+  });
+
+})();
+</script>

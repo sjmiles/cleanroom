@@ -1,0 +1,43 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<template>
+  
+  <style>
+    :host {
+      display: block;
+      border: 1px solid #e1e1e1; 
+      background-color: whitesmoke;
+      font-size: 0.6em;
+    }
+    ad {
+      background-color: #edb802;
+      color: white;
+      border-radius: 2px;
+      padding: 2px;
+      margin: 6px;
+    }
+    x-icon {
+      height: 16px;
+      margin-right: 6px;
+    }
+    copy {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  </style>
+
+  <ad>Ad</ad>
+  <copy>Python Developers in SF - hired.com/Python - Apply Once & Get 5-15 Job Offers, The Marketplace for Python Talent!</copy>
+  <span flex></span>
+  <x-icon icon="info-outline"></x-icon>
+
+</template>
+<script>
+
+  Polymer({
+    name: 'x-ad',
+    _attributes: 'horizontal center layout'
+  });
+
+</script>

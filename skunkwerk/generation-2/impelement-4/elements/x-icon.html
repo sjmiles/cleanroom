@@ -1,0 +1,25 @@
+<script>
+(function() {
+
+  register({
+    name: 'x-icon',
+    createdCallback: function() {
+      this.root = this;
+      this.attributeChanged('icon');
+    },
+    attributeChanged: function(name) {
+      if (name === 'icon') {
+        this.setIcon(this.getAttribute('icon'));
+      }
+    },
+    setIcon: function(icon) {
+      this.root.textContent = '';
+      this.icon = icons[icon];
+      if (this.icon) {
+        this.root.appendChild(this.icon.cloneNode(true));
+      }
+    }
+  });
+
+})();
+</script>

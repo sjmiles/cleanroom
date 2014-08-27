@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+<head>
+
+  <script>
+    //console.timeline();
+    var time = Date.now();
+  </script>
+
+  <meta charset="utf-8">
+  <title>app</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <link rel="import" href="polymer/layout.html">
+  
+  <style>
+    body {
+      font-family: sans-serif;
+    }
+    [flex][scroller] {
+      overflow: auto;
+    }
+    [banner] {
+      min-height: 600px;
+    }
+  </style>
+
+</head>
+<body fullbleed vertical layout>
+
+<div flex scroller>
+  <div style="background-color: orange;" banner vertical layout center-center>
+    <h1>Hero Text</h1>
+  </div>
+  <div style="background-color: whitesmoke;" banner vertical layout center-center>
+    <h1>More Info</h1>
+  </div>
+  <div style="background-color: purple; color: white;" banner vertical layout center-center>
+    <h1>Value Proposition</h1>
+  </div>
+</div>
+
+<script>
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      time = Date.now() - time;
+      console.log('From start to after first paint (?): ' + time + 'ms');
+      document.title = time + 'ms';
+    });
+  });
+</script>
+
+</body>
+</html>

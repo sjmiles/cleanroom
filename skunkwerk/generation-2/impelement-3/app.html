@@ -1,0 +1,67 @@
+<!doctype html>
+<html>
+<head>
+
+  <script>
+    //console.timeline();
+    var time = Date.now();
+  </script>
+
+  <meta charset="utf-8">
+  <title>app</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="import" href="elements/x-toolbar.html">
+  <link rel="import" href="elements/x-icon.html">
+  <link rel="import" href="elements/x-item.html">
+
+  <link rel="import" href="icons.html">
+  <link rel="import" href="data.html">
+
+  <style>
+    body {
+      font-family: sans-serif;
+    }
+    [flex][scroll] {
+      overflow: auto;
+    }
+  </style>
+
+</head>
+<body fullbleed vertical layout>
+
+<x-toolbar><x-icon icon="apps"></x-icon><span>Toolbar</span><x-icon icon="archive"></x-icon><x-icon icon="archive"></x-icon><x-icon icon="archive"></x-icon><x-icon icon="archive"></x-icon><x-icon icon="archive"></x-icon><span flex></span><x-icon icon="box"></x-icon></x-toolbar>
+
+<div id="list" flex scroll></div>
+
+<template id="row">
+  <x-item id="item"></x-item>
+</template>
+
+<script>
+  var $ = document.querySelector.bind(document);
+  //
+  var t= $('#row');
+  var list = $('#list');
+  //
+  for (var i=0; i<data.items.length; i++) {
+    var row = document.importNode(t.content, true);
+    // custom elements in row are upgraded at this point
+    row.querySelector('#item').setItem(data.items[i]);
+    list.appendChild(row);
+  }
+</script>
+
+<script>
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      time = Date.now() - time;
+      console.log('Time to paint (?): ' + time + 'ms');
+      document.title = time;
+    });
+  });
+</script>
+
+</body>
+</html>
