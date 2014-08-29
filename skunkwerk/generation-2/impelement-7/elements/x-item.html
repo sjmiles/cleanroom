@@ -58,10 +58,11 @@
         subject: $('subject'),
         blurb: $('blurb'),
         date: $('date')
-      }
+      };
     },
     setItem: function(item) {
-      this.$.from.textContent = item.from + ' ' + item.count;
+      //this.$.from.textContent = sprintf('{{from}} {{count}}', item);
+      this.$.from.textContent = item.from + ' ' + item.count; 
       this.$.subject.textContent = item.subject;
       this.$.blurb.textContent = item.blurb;
       this.$.date.textContent = item.date;

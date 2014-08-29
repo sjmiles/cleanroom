@@ -1,0 +1,44 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<!--<template>
+  
+  <style>
+    :host {
+      display: block;
+    }
+  </style>
+
+</template>-->
+<script>
+
+  Polymer({
+    name: 'x-repeater',
+    _kind: 'x-item',
+    created: function() {
+      this.style.display = 'block';
+      this.attributeChanged('kind');
+    },
+    attributeChanged: function(name) {
+      if (name === 'kind') {
+        this.kind = this.getAttribute('kind');
+      }
+    },
+    set kind(kind) {
+      this._kind = kind;
+    },
+    set items(items) {
+      this._items = items;
+      this.root.textContent = '';
+      //this.stampTemplate();
+      if (items) {
+        for (var i=0, row, item; item=items[i]; i++) {
+          row = document.createElement(this._kind);
+          row.item = item;
+          this.root.appendChild(row);
+        }
+      }
+    }
+  
+  });
+
+</script>

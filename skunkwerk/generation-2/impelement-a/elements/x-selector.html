@@ -1,0 +1,21 @@
+<script>
+
+  Polymer({
+    name: 'x-selector',
+    created: function() {
+      this.addEventListener('click', this.click.bind(this));
+      this.publishProperty('selected');
+    },
+    click: function(e) {
+      this.selected = e.target;
+      /*
+      var i=-1, node = e.target;
+      if (node) {
+        for (i=0; (node=node.previousSibling); i++);
+      }
+      this.selected = i;
+      */
+    }
+  });
+
+</script>

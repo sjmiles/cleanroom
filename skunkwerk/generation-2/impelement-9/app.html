@@ -16,49 +16,63 @@
 
 </head>
 <body fullbleed vertical layout>
+
   <script>
     console.perf();
   </script>
-  
+
   <!-- appbar -->
   <x-appbar></x-appbar>
-  
+
   <!-- other bars -->
   <div id="otherBars">
     <x-mailbar></x-mailbar>
     <x-composebar></x-composebar>
   </div>
-  
+
   <!-- columns -->
   <div id="columns" flex horizontal layout>
     
     <!-- left column -->
     <div id="leftColumn" vertical layout>
       <!-- label list -->
-      <x-repeater id="labels" flex scroll kind="x-label"></x-repeater>
+      <x-selector id="selector">
+        <x-repeater id="labels" flex scroll kind="x-label"></x-repeater>
+      </x-selector>
       <!-- contact bar -->
       <x-contactbar></x-contactbar>
       <!-- contact list -->
       <x-repeater id="contacts" flex scroll kind="x-label"></x-repeater>
     </div>
-    
+
     <!-- right column -->   
     <x-repeater id="list" kind="x-item" flex scroll></x-repeater>
-  
+
   </div>
-  
+
   <!-- data -->
   <script>
     var $ = document.querySelector.bind(document);
+    //
     $('#list').items = data.items;
     $('#labels').items = data.items.slice(0, 10);
     $('#contacts').items = data.items.slice(20, 35);
+    //
+    $('#selector').watch('selected', function(value, old) {
+      if (old) {
+        old.style.border = '';
+      } 
+      if (value) {
+        value.style.border = '3px solid orange'; 
+      }
+      //document.title = value ? value.text : '(no selection)';
+    });
   </script>
-  
+
   <!-- perf measure -->
   <script>
     console.perfEnd();
   </script>
-  
+
 </body>
 </html>

@@ -1,5 +1,6 @@
 <link rel="import" href="layout.html">
 <link rel="import" href="template.html">
+<link rel="import" href="uberstore.html">
 
 <script>
   Object.defineProperty(window, 'import', {
@@ -17,14 +18,13 @@
   };
   
   Base = {
-    //
     createdCallback: function() {
+      this.initUberClient();
       this.createRoot();
       this.stampTemplate();
       this.installAttributes();
       this.created();
     },
-    //
     createRoot: function(){
       if (this._template) {
         this.root = this.createShadowRoot();
@@ -32,7 +32,6 @@
         this.root = this;
       }
     },
-    //
     stampTemplate: function() {
       if (this._template) {
         this.root.appendChild(instanceTemplate(this._template));
@@ -54,22 +53,26 @@
             }
             //
             if (n.name === 'text') {
+              var prop = node.textContent.slice(2, -2);
               this.bindings.push({
                 node: node,
-                prop: node.textContent.slice(2, -2)
+                prop: prop
               });
-              node.textContent = 'BINDING WAS HERE';
+              this.publishProperty(prop);
+              this.watch(prop, function(value) {
+                node.textContent = value;
+              });
             }
             //
           }, this);
         }
       }
     },
-    updateBoundments: function() {
+    /*updateBoundments: function() {
       this.bindings.forEach(function(b) {
         b.node.textContent = this[b.prop];
       }, this);
-    },
+    },*/
     installAttributes: function() {
       if (this._attributes) {
         attributes(this, this._attributes);
@@ -78,7 +81,9 @@
     created: function() {
     }
   };
-  Base.__proto__ = HTMLElement.prototype;
+  
+  UberClient.__proto__ = HTMLElement.prototype;
+  Base.__proto__ = UberClient;
   
   var Polymer = function(prototype) {
     prototype.__proto__ = Base;

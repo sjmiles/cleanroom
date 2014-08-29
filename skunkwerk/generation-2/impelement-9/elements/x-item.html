@@ -41,32 +41,17 @@
     name: 'x-item',
     _attributes: 'horizontal center layout',
     created: function() {
-      this.findNodes();
+      this.publishProperty('item');
+      this.watch('item', this.itemChanged.bind(this));
     },
-    findNodes: function() {
-      /*
-      var $ = this.root.querySelector.bind(this.root);
-      this.$ = {
-        from: $('from'),
-        subject: $('subject'),
-        blurb: $('blurb'),
-        date: $('date')
-      };
-      */
-    },
-    setItem: function(item) {
-      //this.$.from.textContent = item.from + ' ' + item.count;
-      //this.$.subject.textContent = item.subject;
-      //this.$.blurb.textContent = item.blurb;
-      //this.$.date.textContent = item.date;
-      //
+    itemChanged: function(item) {
       this.from = item.from;
       this.fromCount = item.count;
       this.blurb = item.blurb + '.';
       this.subject = item.subject + '.';
       this.date = item.date;
       //
-      this.updateBoundments();
+      //this.updateBoundments();
       //
       var read = Date.parse(item.date) + 8*24*60*60*1000 < Date.now();
       this.style.fontWeight = read ? '' : 'bold';

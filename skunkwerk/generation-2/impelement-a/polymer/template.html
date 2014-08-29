@@ -8,30 +8,39 @@
     var a = _preprocess(template.content, map);
     if (a) {
       a.map = map;
-      console.log(a.map);
+      //console.log(a.map);
     }
     template.map = map;
   };
 
-  var _preprocess = function(root, map) {
-    var annotations = Object.create(null);
-    //
-    if (root.nodeType === Node.TEXT_NODE) {
+  var _preprocess = function(node, map) {
+    return node.nodeType === Node.TEXT_NODE ? preprocessTextNode(node, map) : preprocessNode(node, map);
+  };
+
+  var preprocessTextNode = function(node, map) {
+    var t = node.textContent;
+    if (t.indexOf('{{') >= 0  || t.indexOf('[[') >= 0) {
+      var annotations = Object.create(null);
       annotations.name = 'text';
-      if (root.textContent.indexOf('{{') >= 0) {
-        map.push(annotations);
-        return annotations;
-      }
-      return null;
+      map.push(annotations);
+      return annotations;
     }
-    //
-    annotations.name = root.localName || 'template';
-    //
+    return null;
+  };
+  
+  var preprocessNode = function(node, map) {
+    var annotations = Object.create(null);
+    parseAnnotations(node, annotations, map);
+    preprocessChildNodes(node, annotations, map);
+    return annotations;
+  };
+  
+  var parseAnnotations = function(node, annotations, map) {
     var bound = false;
-    if (root.attributes) {
+    if (node.attributes) {
       var b$ = annotations.bindings = Object.create(null);
       var e$ = annotations.events = Object.create(null);
-      for (var i=0, a; a=root.attributes[i]; i++) {
+      for (var i=0, a; a=node.attributes[i]; i++) {
         var n = a.name;
         if (n.indexOf('{{') != -1) {
           b$[n] = a.value;
@@ -45,8 +54,11 @@
     }
     if (bound) {
       map.push(annotations);
-    }
-    //
+    }    
+    annotations.name = node.localName || 'template';
+  };
+  
+  var preprocessChildNodes = function(root, annotations, map) {
     if (root.firstChild) {
       var c$ = annotations.children = [];
       for (var i=0, node=root.firstChild; node; node=node.nextSibling, i++) {
@@ -58,10 +70,8 @@
         c$.push(ann);
       }
     }
-    //
-    return annotations;
   };
-
+  
   var mapFind = function(root, n) {
     return n.parent ? mapFind(root, n.parent).childNodes[n.index] : root;
   };

@@ -2,6 +2,7 @@ UberStore = function() {
   this.store = [];
   this.watchers = [];
 };
+
 UberStore.prototype = {
   add: function(value) {
     return this.store.push(value);
@@ -35,8 +36,8 @@ UberStore.prototype = {
 
 UberStore = new UberStore();
   
-Base = {
-  init: function() {
+UberClient = {
+  initUberClient: function() {
     this._map = {};
   },
   publishProperty: function(name) {

@@ -10,6 +10,7 @@
     }
   </style>
   
+  <span>{{text}}</span>
 </template>
 
 <script>
@@ -18,15 +19,13 @@
   Polymer({
     name: 'x-label',
     created: function() {
-      this.text = document.createTextNode('');
-      this.root.appendChild(this.text);
+      this.publishProperty('item');
+      this.watch('item', this.itemChanged.bind(this));
     },
-    setItem: function(item) {
-      this.text.textContent = item.from + ' ' + item.count;
+    itemChanged: function(item) {
+      this.text = item.from + ' ' + item.count;
       this.style.fontWeight = item.count ? 'bold' : '';
-    },
-    bound: function() {
-      this.setItem(this.templateInstance.model);
+      //this.updateBoundments();
     }
   });
 
