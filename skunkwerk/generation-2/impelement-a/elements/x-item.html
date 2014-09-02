@@ -23,14 +23,14 @@
     blurb {
       color: gray;
     }
-    span {
+    :host > span {
       margin-right: 8px;
     }
   </style>
 
   <x-icon icon="box" on-click="click"></x-icon><x-icon icon="apps"></x-icon><x-icon icon="archive"></x-icon>
   <from flex><span>[[from]]</span><span>[[fromCount]]</span></from>
-  <span flex five><subject>[[subject]]</subject> - <blurb>[[blurb]]</blurb></span>
+  <span flex five><subject><span>[[subject]]</span>.</subject> - <blurb><span>[[blurb]]</span>.</blurb></span>
   <x-icon icon="apps"></x-icon>
   <date>[[date]]</date>
 
@@ -47,8 +47,8 @@
     itemChanged: function(item) {
       this.from = item.from;
       this.fromCount = item.count;
-      this.blurb = item.blurb + '.';
-      this.subject = item.subject + '.';
+      this.blurb = item.blurb;
+      this.subject = item.subject;
       this.date = item.date;
       //
       this.updateBoundments();

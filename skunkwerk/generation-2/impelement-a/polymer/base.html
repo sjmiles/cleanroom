@@ -20,15 +20,17 @@
     stampTemplate: function() {
       if (this._template) {
         this.root.appendChild(instanceTemplate(this._template));
-        //
-        if (this._template.map) {
-          this.bindings = [];
-          this._template.map.forEach(function(n) {
-            var node = mapFind(this.root, n);
-            this.marshalListeners(node, n.events);
-            this.marshalBindings(node, n);
-          }, this);
-        }
+        this.marshalAnnotations();
+      }
+    },
+    marshalAnnotations: function() {
+      if (this._template.map) {
+        this.bindings = [];
+        this._template.map.forEach(function(n) {
+          var node = mapFind(this.root, n);
+          this.marshalListeners(node, n.events);
+          this.marshalBindings(node, n);
+        }, this);
       }
     },
     marshalListeners: function(node, events) {
@@ -43,19 +45,48 @@
       }
     },
     marshalBindings: function(node, annotation) {
+      // cheat by only supporting textContent bindings in textNodes
       if (annotation.name === 'text') {
-        var prop = node.textContent.slice(2, -2);
+        var prop = annotation.value.slice(2, -2);
         this.bindings.push({
           node: node,
           prop: prop
         });
         if (node.textContent[0] == '{') {
+          // TODO(sjmiles): we should set up the getter/setter machinery in the prototype instead
           this.publishProperty(prop);
           this.watch(prop, function(value) {
             node.textContent = value;
           });
         }
+        node.textContent = this[prop];
       }
+      // these are bindings in attributes
+      var b$ = annotation.bindings;
+      for (var name in b$) {
+        var b = b$[name];
+        this.publishProperty(b.prop);
+        this.watch(b.prop, function(value) {
+          node.setAttribute(name, value);
+        });
+        node.setAttribute(name, this[b.prop]);
+      }
+    },
+    // currently called in the context of a protoype object, not instances
+    marshalProperties: function() {
+      /*
+      if (this._template.map) {
+        this._template.map.forEach(function(n) {
+          if (n.name === 'text') {
+            if (n.value[0] === '{}') {
+              var prop = n.value.slice(2, -2);
+              console.log('[%s] marshalProperty: %s', this.name, prop);
+              this.defineAccessors(prop);
+            }
+          }
+        }, this);
+      }      
+      */
     },
     updateBoundments: function() {
       this.bindings.forEach(function(b) {

@@ -21,54 +21,81 @@
     console.perf();
   </script>
 
-  <!-- appbar -->
-  <x-appbar></x-appbar>
+  <x-app flex></x-app>
 
-  <!-- other bars -->
-  <div id="otherBars">
-    <x-mailbar></x-mailbar>
-    <x-composebar></x-composebar>
-  </div>
-
-  <!-- columns -->
-  <div id="columns" flex horizontal layout>
+  <template>
     
-    <!-- left column -->
-    <div id="leftColumn" vertical layout>
-      <!-- label list -->
-      <x-selector id="selector">
-        <x-repeater id="labels" flex scroll kind="x-label"></x-repeater>
-      </x-selector>
-      <!-- contact bar -->
-      <x-contactbar></x-contactbar>
-      <!-- contact list -->
-      <x-repeater id="contacts" flex scroll kind="x-label"></x-repeater>
-    </div>
-
-    <!-- right column -->   
-    <x-repeater id="list" kind="x-item" flex scroll></x-repeater>
-
-  </div>
-
-  <!-- data -->
-  <script>
-    var $ = document.querySelector.bind(document);
-    //
-    $('#list').items = data.items;
-    $('#labels').items = data.items.slice(0, 10);
-    $('#contacts').items = data.items.slice(20, 35);
-    //
-    $('#selector').watch('selected', function(value, old) {
-      if (old) {
-        old.style.border = '';
-      } 
-      if (value) {
-        value.style.border = '3px solid orange'; 
+    <style>
+      :host {
+        display: block;
       }
-      //document.title = value ? value.text : '(no selection)';
+      #otherBars {
+        margin-right: 16px;
+      }
+      #columns {
+       padding-left: 32px;  
+      }
+      #leftColumn {
+        width: 200px; 
+        padding-right: 8px;
+      }
+    </style>
+    
+    <!-- appbar -->
+    <x-appbar></x-appbar>
+  
+    <!-- other bars -->
+    <div id="otherBars">
+      <x-mailbar></x-mailbar>
+      <x-composebar></x-composebar>
+    </div>
+  
+    <!-- columns -->
+    <div id="columns" flex horizontal layout style="overflow: hidden;">
+      
+      <!-- left column -->
+      <div id="leftColumn" vertical layout>
+        <!-- label list -->
+        <x-selector id="selector" flex scroll>
+          <x-repeater id="labels" kind="x-label"></x-repeater>
+        </x-selector>
+        <!-- contact bar -->
+        <x-contactbar></x-contactbar>
+        <!-- contact list -->
+        <x-repeater id="contacts" flex scroll kind="x-contact-item"></x-repeater>
+      </div>
+  
+      <!-- main column -->   
+      <x-repeater id="list" kind="x-item" flex scroll></x-repeater>
+  
+    </div>
+         
+  </template>
+  <script>
+  
+    Polymer({
+      name: 'x-app',
+      _attributes: 'vertical layout',
+      created: function() {
+        var $ = this.root.querySelector.bind(this.root);
+        //
+        $('#list').items = data.items;
+        $('#labels').items = data.items.slice(0, 10);
+        $('#contacts').items = data.items.slice(20, 35);
+        //
+        $('#selector').watch('selected', function(value, old) {
+          if (old) {
+            old.style.border = '';
+          } 
+          if (value) {
+            value.style.border = '3px solid orange'; 
+          }
+        });
+      }
     });
+    
   </script>
-
+  
   <!-- perf measure -->
   <script>
     console.perfEnd();

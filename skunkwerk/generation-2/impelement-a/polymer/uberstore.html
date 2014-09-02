@@ -44,17 +44,37 @@ UberStore = new UberStore();
 UberClient = {
   initUberClient: function() {
     this._map = {};
+    /*
+    if (Object.keys(this._defined).length === 0) {
+      return;
+    }
+    console.group('[%s]: publishing properties: ', this.name);
+    for (var n in this._defined) {
+      this.publishProperty(n);
+    }
+    console.groupEnd();
+    */
   },
   publishProperty: function(name) {
-    this._map[name] = UberStore.add(null);
-    Object.defineProperty(this, name, {
-      get: function() {
-        return UberStore.get(this._map[name]);
-      },
-      set: function(value) {
-        return UberStore.set(this._map[name], value);
-      }
-    });      
+    if (!(name in this._map)) {
+      //console.log('[%s]: publishProperty: ', this.name, name);
+      this._map[name] = UberStore.add(null);
+      this.defineAccessors(name);
+    }
+  },
+  defineAccessors: function(name) {
+    //if (!this._defined[name]) {
+      //console.log('[%s]: defineAccessors: ', this.name, name);
+      this._defined[name] = true;
+      Object.defineProperty(this, name, {
+        get: function() {
+          return UberStore.get(this._map[name]);
+        },
+        set: function(value) {
+          return UberStore.set(this._map[name], value);
+        }
+      });      
+    //}
   },
   bindProperty: function(name, targetName, target) {
     UberStore.remove(this._map[name]);

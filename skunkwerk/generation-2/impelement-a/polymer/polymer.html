@@ -17,9 +17,11 @@
   
   var Polymer = function(prototype) {
     prototype.__proto__ = Base;
+    prototype._defined = {};
     prototype._template = window.import.querySelector('template');
     if (prototype._template) {
       preprocessTemplate(prototype._template);
+      prototype.marshalProperties();
     }
     document.registerElement(prototype.name, {prototype: prototype});
   }

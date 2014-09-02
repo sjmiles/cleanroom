@@ -8,24 +8,35 @@
       margin: 6px 0;
       cursor: pointer;
     }
+    img {
+      width: 24px;
+      height: 24px;
+      vertical-align: middle;
+    }
   </style>
+
+  <div horizontal center layout>  
+    <img avatar src="{{avatar}}">&nbsp;<span>{{text}}</span>
+  </div>
   
-  <span>[[text]]</span>
 </template>
 
 <script>
 (function() {
 
+  var index = 0;
+  
   Polymer({
-    name: 'x-label',
+    name: 'x-contact-item',
     created: function() {
       this.publishProperty('item');
       this.watch('item', this.itemChanged.bind(this));
     },
     itemChanged: function(item) {
-      this.style.fontWeight = item.count ? 'bold' : '';
+      this.avatar = 'assets/avatar-0' + (index++ % 5) + '.png';
       this.text = item.from + ' ' + item.count;
-      this.updateBoundments();
+      //this.updateBoundments();
+      this.style.fontWeight = item.count ? 'bold' : '';
     }
   });
 
