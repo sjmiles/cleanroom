@@ -49,6 +49,9 @@
         attributes(this, this._attributes);
       }
     },
+    $: function(slctr) {
+      return this.root.querySelector(slctr);
+    },
     created: function() {
     }
   };

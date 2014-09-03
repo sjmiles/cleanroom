@@ -1,0 +1,33 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<template>
+  
+  <style>
+    :host {
+      display: block;
+    }
+    x-toolbar {
+      background-color: white;
+      border: 1px solid #e8e8e8;
+      border-left: none;
+      border-right: none;
+      padding-left: 0px; 
+      xfont-size: 0.8em;
+    }
+  </style>
+
+  <x-toolbar>
+    <img avatar src="assets/avatar-00.png" style="margin-left: 0;"></img>
+    <x-drop-button style="border: none; background-color: inherit;">User</x-drop-button>
+    <span flex></span>
+    <x-icon-button icon="search"></x-icon-button>
+  </x-toolbar>
+
+</template>
+<script>
+
+  Polymer({
+    name: 'x-contactbar'
+  });
+
+</script>

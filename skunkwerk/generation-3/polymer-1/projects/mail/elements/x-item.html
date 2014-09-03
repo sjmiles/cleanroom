@@ -1,0 +1,75 @@
+<template>
+
+  <style>
+    :host {
+      display: block;
+      font-size: 0.8em;
+      white-space: nowrap;
+      cursor: pointer;
+      border-bottom: 1px solid #eeeeee;
+      padding: 8px 0 8px 8px;
+    }
+    :host > * {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    from, date {
+      margin: 0 1em;
+    }
+    date {
+      text-align: right;
+      width: 6em;
+    }
+    blurb {
+      color: gray;
+    }
+    :host > span {
+      margin-right: 8px;
+    }
+  </style>
+
+  <x-icon icon="box" on-click="click"></x-icon><x-icon icon="apps"></x-icon><x-icon icon="archive"></x-icon>
+  <from flex><span>[[from]]</span><span>[[fromCount]]</span></from>
+  <span flex five><subject><span>[[subject]]</span>.</subject> - <blurb><span>[[blurb]]</span>.</blurb></span>
+  <x-icon icon="apps"></x-icon>
+  <date>[[date]]</date>
+
+</template>
+<script>
+
+  Polymer({
+    name: 'x-item',
+    _attributes: 'horizontal center layout',
+    created: function() {
+      this.publishProperty('item');
+      this.watch('item', this.itemChanged);
+    },
+    // observing the particulars of item is potentially expensive
+    // instead we provide this manual API to provoke processing of 'item'
+    itemChanged: function() {
+      // the binding-model contains the exploded fields of item;
+      // as imagined here, this is different from the public-model,
+      // which is simply 'item'
+      // currently both models are expressed on 'this', but perhaps
+      // the binding model should be private
+      // there are costs involved with marshaling the data in either
+      // direction, but there may also be savings to be had by having
+      // a discrete object for the binding-model
+      this.from = this.item.from;
+      this.fromCount = this.item.count;
+      this.blurb = this.item.blurb;
+      this.subject = this.item.subject;
+      this.date = this.item.date;
+      // ask the template engine to update the DOM from data
+      this.updateBoundments();
+      // manual DOM updates
+      var read = Date.parse(this.item.date) + 8*24*60*60*1000 < Date.now();
+      this.style.fontWeight = read ? '' : 'bold';
+      this.style.backgroundColor = read ? '#f8f8f8' : '';
+    },
+    click: function(e) {
+      e.target.style.backgroundColor = e.target.style.backgroundColor ? '' : 'orange';
+    }
+  });
+
+</script>

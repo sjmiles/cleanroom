@@ -2,14 +2,14 @@
 <html>
 <head>
 
-  <script src="perf.js"></script>
+  <script src="../../lib/perf.js"></script>
 
   <meta charset="utf-8">
   <title>app</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <link rel="import" href="elements.html">
+  <link rel="import" href="../../elements/elements.html">
   <link rel="import" href="assets/icons.html">
   <link rel="import" href="assets/data.html">
   <link rel="stylesheet" href="app.css">
@@ -56,17 +56,17 @@
       <!-- left column -->
       <div id="leftColumn" vertical layout>
         <!-- label list -->
-        <x-selector id="selector" flex scroll>
-          <x-repeater id="labels" kind="x-label"></x-repeater>
-        </x-selector>
+        <x-repeater items="{{*labels}}" kind="x-label"></x-repeater>
         <!-- contact bar -->
         <x-contactbar></x-contactbar>
         <!-- contact list -->
-        <x-repeater id="contacts" flex scroll kind="x-contact-item"></x-repeater>
+        <x-repeater flex scroll items="{{*contacts}}" kind="x-contact-item"></x-repeater>
       </div>
 
       <!-- main column -->   
-      <x-repeater id="list" kind="x-item" flex scroll></x-repeater>
+      <x-selector id="selector" flex scroll>
+        <x-repeater kind="x-item" items="{{*mail}}"></x-repeater>
+      </x-selector>
 
     </div>
 
@@ -79,16 +79,16 @@
       created: function() {
         var $ = this.root.querySelector.bind(this.root);
         //
-        $('#list').items = data.items;
-        $('#labels').items = data.items.slice(0, 10);
-        $('#contacts').items = data.items.slice(20, 35);
+        this.mail = data.items;
+        this.labels = data.items.slice(0, 10);
+        this.contacts = data.items.slice(20, 35);
         //
         $('#selector').watch('selected', function(value, old) {
           if (old) {
             old.style.border = '';
           } 
           if (value) {
-            value.style.border = '3px solid orange'; 
+            value.style.border = '1px solid orange'; 
           }
         });
       }

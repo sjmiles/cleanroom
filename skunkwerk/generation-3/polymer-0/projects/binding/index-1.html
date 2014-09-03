@@ -2,14 +2,14 @@
 <html>
 <head>
 
-  <script src="../lib/perf.js"></script>
+  <script src="../../lib/perf.js"></script>
 
   <meta charset="utf-8">
   <title>app</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <link rel="import" href="../polymer/polymer.html">
+  <link rel="import" href="../../polymer/polymer.html">
 
 </head>
 <body fullbleed vertical layout>
@@ -22,36 +22,35 @@
   <x-test flex></x-test>
 
   <template>
-    
+
     <style>
       :host {
         display: block;
       }
     </style>
     <input value="{{value}}" on-change="inputChange">
-         
+
   </template>
   <script>
-  
+    function bindBack(ctlrl, node, event, prop) {
+      node.addEventListener(event, function(e) {
+        ctlrl[prop] = e.target[prop];
+      });
+    }
+
     Polymer({
       name: 'x-test',
       value: 'spoo',
       created: function() {
         // publisher sets everything to null so prototype value is destroyed
         this.value = 'spoo';
-      },
-      // implement two-way binding on input via event
-      // there are two flavors of change notification for input
-      // 'change' and 'input' (commit) ... interesting variation
-      // on binding concept and/or asynchronous change notifier
-      inputChange: function(e) {
-        this.value = e.target.value;
-        console.log(this.value);
+        // implement reverse binding via event
+        bindBack(this, this.root.querySelector('input'), 'change', 'value');
       }
     });
-    
+
   </script>
-  
+
   <!-- perf out -->
   <script>
     console.perfEnd();

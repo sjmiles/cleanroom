@@ -1,0 +1,63 @@
+<script>
+
+function Datum(x) {
+  this.value = x;
+}
+
+Datum.prototype = {
+  setValue: function(value) {
+    var old = this.value;
+    if (old !== value) {
+      this.value = value;
+      this.notify(old);
+    }
+  },
+  watch: function(notifier) {
+    if (!this.watchers) {
+      this.watchers = [];
+    }
+    this.watchers.push(notifier);
+  },
+  notify: function(old) {
+    if (this.watchers) {
+      var value = this.value;
+      this.watchers.forEach(function(w) {
+        w(value, old);
+      });
+    }
+  }
+};
+
+DataClient = {
+  init: function() {
+    this._data = {};
+  },
+  publishProperty: function(name) {
+    if (!(name in this._data)) {
+      //console.log('[%s]: publishProperty: ', this.name, name);
+      this._data[name] = new Datum(null);
+      this.defineAccessors(name);
+    }
+  },
+  defineAccessors: function(name) {
+    //console.log('[%s]: defineAccessors: ', this.name, name);
+    Object.defineProperty(this, name, {
+      get: function() {
+        return this._data[name].value;
+      },
+      set: function(value) {
+        this._data[name].setValue(value);
+      }
+    });      
+  },
+  bindProperty: function(name, targetName, target) {
+    this._data[name] = target._data[targetName];
+  },
+  watch: function(name, notify) {
+    this._data[name].watch(notify.bind(this));
+  }
+};
+
+features.push(DataClient);
+
+</script>
