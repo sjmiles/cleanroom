@@ -1,0 +1,29 @@
+<link rel="import" href="import.html">
+<link rel="import" href="template.html">
+<link rel="import" href="uberstore.html">
+<link rel="import" href="base.html">
+<link rel="import" href="layout.html">
+
+<script>
+  UberClient.__proto__ = HTMLElement.prototype;
+  Base.__proto__ = UberClient;
+  
+  // TODO(sjmiles): we could make some form of the 
+  // Polymer function that has pluggable features;
+  // aka choose your own Base.
+  // The actual code here would be trivial at that point, but is it
+  // useful to describe a pattern this way, even if the reality
+  // is that it's easy to do by hand? 
+  var Polymer = function(prototype) {
+    prototype.__proto__ = Base;
+    prototype._defined = {};
+    prototype._template = window.import.querySelector('template');
+    //
+    if (prototype._template) {
+      preprocessTemplate(prototype._template);
+      prototype.marshalProperties();
+    }
+    //
+    document.registerElement(prototype.name, {prototype: prototype});
+  }
+</script>

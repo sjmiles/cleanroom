@@ -1,0 +1,88 @@
+<script>
+
+UberStore = function() {
+  this.store = [];
+  this.watchers = [];
+};
+
+UberStore.prototype = {
+  add: function(value) {
+    return this.store.push(value) - 1;
+  },
+  remove: function(key) {
+    this.store[key] = undefined;
+  },
+  set: function(key, value) {
+    var old = this.store[key];
+    if (old !== value) {
+      this.store[key] = value;
+      this.notify(key, value, old);
+    }
+  },
+  notify: function(key, value, old) {
+    var watchers = this.watchers[key];
+    if (watchers) {
+      watchers.forEach(function(w) {
+        w(value, old);
+      });
+    }
+  },
+  get: function(key) {
+    return this.store[key];
+  },
+  watch: function(key, watcher) {
+    var watchers = this.watchers[key];
+    if (!watchers) {
+      watchers = this.watchers[key] = [];
+    }
+    watchers.push(watcher);
+  }
+};
+
+UberStore = new UberStore();
+  
+UberClient = {
+  initUberClient: function() {
+    this._map = {};
+    /*
+    if (Object.keys(this._defined).length === 0) {
+      return;
+    }
+    console.group('[%s]: publishing properties: ', this.name);
+    for (var n in this._defined) {
+      this.publishProperty(n);
+    }
+    console.groupEnd();
+    */
+  },
+  publishProperty: function(name) {
+    if (!(name in this._map)) {
+      //console.log('[%s]: publishProperty: ', this.name, name);
+      this._map[name] = UberStore.add(null);
+      this.defineAccessors(name);
+    }
+  },
+  defineAccessors: function(name) {
+    //if (!this._defined[name]) {
+      //console.log('[%s]: defineAccessors: ', this.name, name);
+      this._defined[name] = true;
+      Object.defineProperty(this, name, {
+        get: function() {
+          return UberStore.get(this._map[name]);
+        },
+        set: function(value) {
+          return UberStore.set(this._map[name], value);
+        }
+      });      
+    //}
+  },
+  bindProperty: function(name, targetName, target) {
+    UberStore.remove(this._map[name]);
+    this._map[name] = target._map[targetName];
+  },
+  watch: function(name, notify) {
+    UberStore.watch(this._map[name], notify);
+  }
+};
+
+</script>
