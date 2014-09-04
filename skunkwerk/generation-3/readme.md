@@ -5,11 +5,12 @@
   polymer-1
   ---------
   add x-pages and additional UI to projects/mail; trying to uncover more natural data-binding patterns
+  implement missing bookkeeping and algorithm for merging DataClient datums 
   
   polymer-0
   ---------
   there is enough promising code, begin trying to organize a bit
-  use jmesserly's vastly superior implementation of the UberStore concept (DataClient)
+  use jmesserly's superior implementation of the UberStore concept (now DataClient)
   nascent unification (at implementation) of the standard three DOM-binding patterns (.textContent, .<property>, attributes.<property>.value)
   connect DataClient with DOM-binding logic, a discrete fourth pattern for DOM-binding
 

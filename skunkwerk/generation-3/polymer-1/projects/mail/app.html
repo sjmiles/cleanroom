@@ -85,13 +85,13 @@
       name: 'x-app',
       _attributes: 'vertical layout',
       created: function() {
-        var $ = this.root.querySelector.bind(this.root);
+        this.addEventListener('back-action', this.mailListAction.bind(this));
         //
         this.mail = data.items;
         this.labels = data.items.slice(0, 10);
         this.contacts = data.items.slice(20, 35);
         //
-        $('#selector').watch('selected', function(value, old) {
+        this.$('#selector').watch('selected', function(value, old) {
           if (old) {
             old.style.border = '';
           } 
@@ -101,7 +101,8 @@
           this.selected = 1;
         }.bind(this));
       },
-      mailListAction: function() {
+      mailListAction: function(e) {
+        e.stopPropagation();
         this.selected = 0;
       }
     });

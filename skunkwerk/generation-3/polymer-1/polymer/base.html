@@ -28,11 +28,16 @@
       this.installAttributes();
       this.created();
     },
+    created: function() {
+    },
     initFeatures: function() {
       features.forEach(function(f) {
         f.init.call(this);
       }, this);
     },
+    //
+    // TODO(sjmiles): all the following probably should be 'features'
+    //
     createRoot: function(){
       // TODO(sjmiles): ad hoc to switch on _template existence here
       this.root = this._template ? this.createShadowRoot() : this;
@@ -52,7 +57,16 @@
     $: function(slctr) {
       return this.root.querySelector(slctr);
     },
-    created: function() {
+    fire: function(type, detail, onNode, bubbles, cancelable) {
+      var node = onNode || this;
+      var detail = (detail === null || detail === undefined) ? {} : detail;
+      var event = new CustomEvent(type, {
+        bubbles: bubbles !== undefined ? bubbles : true,
+        cancelable: cancelable !== undefined ? cancelable : true,
+        detail: detail
+      });
+      node.dispatchEvent(event);
+      return event;
     }
   };
   
