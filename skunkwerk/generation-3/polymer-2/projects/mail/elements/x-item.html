@@ -1,0 +1,101 @@
+<template>
+
+  <style>
+    :host {
+      display: block;
+      font-size: 0.8em;
+      white-space: nowrap;
+      cursor: pointer;
+      border-bottom: 1px solid #eeeeee;
+      padding: 8px 0 8px 8px;
+    }
+    :host > * {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    from, date {
+      margin: 0 1em;
+    }
+    date {
+      text-align: right;
+      width: 6em;
+    }
+    blurb {
+      color: gray;
+    }
+    :host > span {
+      margin-right: 8px;
+    }
+  </style>
+
+  <x-icon icon="box" on-click="click"></x-icon><x-icon icon="apps"></x-icon><x-icon icon="archive"></x-icon>
+  <from flex><span>[[from]]</span><span>[[count]]</span></from>
+  <span flex five><subject><span>[[subject]]</span>.</subject> - <blurb><span>[[blurb]]</span>.</blurb></span>
+  <x-icon icon="apps"></x-icon>
+  <date>[[date]]</date>
+
+</template>
+<script>
+
+  Polymer({
+    name: 'x-item',
+    _attributes: 'horizontal center layout',
+    // do not automatically stamp template at create time, we'll do this later
+    //deferStamp: true,
+    created: function() {
+      this.publishProperty('item');
+      this.watch('item', this.itemChanged);
+      // 1. modified the annotations system to indirect bindings
+      // through the `_model` property (initially set to `this`)
+      //this.publishProperty('_model');
+      //this.bindProperty('item', '_model', this);
+    },
+    // observing the particulars of item is potentially expensive
+    // instead we provide this manual API to provoke processing of 'item'
+    itemChanged: function() {
+      //this.stampTemplate();
+      // the binding-model contains the exploded fields of item;
+      // as imagined here, this is different from the public-model,
+      // which is simply 'item'
+      // currently both models are expressed on 'this', but perhaps
+      // the binding model should be private
+      // there are costs involved with marshaling the data in either
+      // direction, but there may also be savings to be had by having
+      // a discrete object for the binding-model
+      
+      // contrary to my initial reports, each of these appear to yield roughly 
+      // the same performance in the mail app
+       
+      /*
+      this.from = this.item.from;
+      this.count = this.item.count;
+      this.blurb = this.item.blurb;
+      this.subject = this.item.subject;
+      this.date = this.item.date;
+      */
+      // use item directly as the binding-model
+      this._model = this.item;
+      /*
+      this._model = {
+        from: this.item.from,
+        count: this.item.count,
+        blurb: this.item.blurb,
+        subject: this.item.subject,
+        date: this.item.date
+      };
+      */
+     
+      // ask the template engine to update the DOM from data
+      this.updateBindings();
+      // manual DOM updates
+      var read = Date.parse(this.item.date) + 8*24*60*60*1000 < Date.now();
+      this.style.fontWeight = read ? '' : 'bold';
+      this.style.backgroundColor = read ? '#f8f8f8' : '';
+    },
+    click: function(e) {
+      e.target.style.backgroundColor = 
+        e.target.style.backgroundColor ? '' : 'orange';
+    }
+  });
+
+</script>

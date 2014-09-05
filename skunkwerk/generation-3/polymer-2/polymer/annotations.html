@@ -1,0 +1,122 @@
+<script>
+
+  // TODO(sjmiles):
+  // * separate annotation processing from binding setup
+  // * separate publishing/watching from the last mile of data -> target
+  //   (iow make an API for updating DOM that a particular watch implementation
+  //   can hook into)
+  
+  var annotatedTemplatesFeature = {
+    init: function() {
+      this._model = this;
+    },
+    marshalAnnotations: function() {
+      if (this._template.map) {
+        this.bindings = [];
+        this._template.map.forEach(function(n) {
+          var node = mapFind(this.root, n);
+          this.marshalListeners(node, n.events);
+          this.marshalBindings(node, n);
+        }, this);
+        this.implementBindings();
+        // TODO(sjmiles): we don't necessarily want to do this here
+        this.updateBindings();
+      }
+    },
+    marshalListeners: function(node, events) {
+      var ctrlr = this;
+      for (var name in events) {
+        var method = events[name];
+        node.addEventListener(name, function(e) {
+          if (ctrlr[method]) {
+            ctrlr[method](e, e.detail);
+          }
+        });
+      }
+    },
+    marshalBindings: function(node, annotation) {
+      // cheat by only supporting textContent bindings in textNodes
+      if (annotation.name === 'text') {
+        var prop = annotation.value.slice(2, -2);
+        this.bindings.push({
+          kind: 'text',
+          mode: node.textContent[0] === '{' ? 'auto' : '', 
+          node: node,
+          prop: prop
+        });
+        /*
+        var fn = function(value) {
+          node.data = value;
+        };
+        if (node.textContent[0] == '{') {
+          this.publishProperty(prop);
+          this.watch(prop, fn);
+        }
+        fn(this._model[prop]);
+        */
+      }
+      // these are bindings in attributes
+      var b$ = annotation.bindings;
+      for (var name in b$) {
+        var b = b$[name];
+        var prop = b.prop;
+        // ad hoc property binding
+        if (prop[0] === '*') {
+          prop = prop.slice(1);
+          // this is a 'fourth' type of binding
+          // that utilizes shared storage for performance
+          // (avoiding the need to propagate changes)
+          if (node._data) {
+            this.publishProperty(prop);
+            this.bindProperty(prop, name, node);
+            return;
+          }
+          // property binding
+          var fn = function(value) {
+            node[name] = value;
+          };
+        } else {
+          // attribute binding
+          var fn = function(value) {
+            node.setAttribute(name, value);
+          };
+        }
+        // all three binding types resolve to this and even fn is 
+        // only slightly different
+        this.publishProperty(prop);
+        this.watch(prop, fn);
+        fn(this._model[prop]);
+      }
+    },
+    implementBindings: function() {
+      this.bindings.map(function(b) {
+        switch(b.kind) {
+          case 'text':
+            // behavior defined here
+            var node = b.node;
+            b.fn = function(value) {
+              node.data = value;
+            };
+            if (b.mode === 'auto') {
+              this.publishProperty(b.prop);
+              this.watch(b.prop, b.fn);
+            }
+            break;
+        }
+      }, this);
+    },
+    updateBindings: function() {
+      this.bindings.forEach(function(b) {
+        switch(b.kind) {
+          case 'text':
+            // data source defined here
+            b.fn(this._model[b.prop]);
+            break;
+        }
+      }, this);
+    }
+  };
+  
+  features.push(annotatedTemplatesFeature);
+  
+</script>

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <style>
+    iframe {
+      border: 0;
+      width: 80%;
+      height: 500px;
+    }  
+  </style>
+  
+</head>
+<body>
+  <div id="time"></div>
+  <iframe src="../generation-3/polymer-2/projects/mail/app.html" onload="load()"></iframe> 
+
+  <script>
+    var info = document.querySelector('#time');
+    var frame = document.querySelector('iframe');
+    //
+    measure = function(next) {
+      var it = setInterval(function() {
+        var time = frame.contentDocument.title;
+        if (time.slice(-2) === 'ms') {
+          clearInterval(it);
+          time = Number(time.slice(0, -2));
+          next(time);
+        }
+      }, 300);
+    }
+    //
+    total = 0;
+    count = 1;
+    //
+    load = function() {
+      measure(function(time) {
+        total += time;
+        info.textContent = (total / count).toFixed(2) + 'ms';
+        if (count++ < 50) {
+          frame.remove();
+          frame = document.createElement('iframe');
+          frame.onload = load;
+          frame.src="../generation-3/polymer-2/projects/mail/app.html";
+          document.body.appendChild(frame);
+        }
+      });
+    }
+  </script>
+
+</body>
+</html>
