@@ -18,11 +18,11 @@ Skunkwerks notes as of generation-3/polymer-4
 * you can only extend HTMLElement, there is no subclassing and no 
   'super()' implementation
 * there are no expressions, and bindings to textContent are all-or-nothing (iow, 
-  <span>{{foo}}</span> is supported but <span>Hey {{foo}}!</span>) is not
+  `<span>{{foo}}</span>` is supported but `<span>Hey {{foo}}!</span>)` is not
 * binding names (inside mustaches) must refer to immediate properties on the 
   model 
 * only works with native web-components on Chrome
-* there is no <polymer-element> wrapper, put only one element per import (to 
+* there is no `<polymer-element>` wrapper, put only one element per import (to 
   avoid template confusion)
 
 ## Code notes
