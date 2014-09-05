@@ -1,0 +1,118 @@
+<!doctype html>
+<html>
+<head>
+
+  <script src="../../lib/perf.js"></script>
+
+  <meta charset="utf-8">
+  <title>app</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="import" href="../../elements/elements.html">
+  <link rel="import" href="elements/elements.html">
+  
+  <link rel="import" href="assets/icons.html">
+  <link rel="import" href="assets/data.html">
+  <link rel="stylesheet" href="app.css">
+
+</head>
+<body fullbleed vertical layout>
+
+  <script>
+    console.perf();
+  </script>
+
+  <x-app flex></x-app>
+
+  <template>
+    
+    <style>
+      :host {
+        display: block;
+      }
+      #otherBars {
+        margin-right: 16px;
+      }
+      #columns {
+       margin-left: 32px;  
+      }
+      #leftColumn {
+        width: 200px; 
+        margin-right: 8px;
+      }
+    </style>
+
+    <!-- appbar -->
+    <x-appbar></x-appbar>
+
+    <!-- other bars -->
+    <div id="otherBars">
+      <x-mailbar selected="{{*selected}}"></x-mailbar>
+      <x-composebar></x-composebar>
+    </div>
+
+    <!-- columns -->
+    <div id="columns" flex horizontal layout style="overflow: hidden;">
+      
+      <!-- left column -->
+      <div id="leftColumn" vertical layout>
+        <!-- label list -->
+        <x-repeater items="{{*labels}}" kind="x-label"></x-repeater>
+        <!-- contact bar -->
+        <x-contactbar></x-contactbar>
+        <!-- contact list -->
+        <x-repeater flex scroll items="{{*contacts}}" kind="x-contact-item"></x-repeater>
+      </div>
+
+      <!-- main column -->   
+      <x-pages selected="{{*selected}}" flex vertical layout>
+
+        <x-selector id="selector" flex scroll>
+          <x-repeater kind="x-item" items="{{*mail}}"></x-repeater>
+        </x-selector>
+
+        <div on-click="mailListAction" flex>And now for something completely different...</div>
+
+      </x-pages>
+
+    </div>
+
+  </template>
+  <script>
+
+    Polymer({
+      name: 'x-app',
+      _attributes: 'vertical layout',
+      created: function() {
+        this.addEventListener('back-action', this.mailListAction.bind(this));
+        //
+        this.mail = data.items;
+        this.labels = data.items.slice(0, 10);
+        this.contacts = data.items.slice(20, 35);
+        //
+        this.$('#selector').watch('selected', function(value, old) {
+          if (old) {
+            old.style.border = '';
+          } 
+          if (value) {
+            value.style.border = '1px solid orange'; 
+          }
+          this.selected = 1;
+        }.bind(this));
+      },
+      mailListAction: function(e) {
+        e.stopPropagation();
+        this.selected = 0;
+      }
+    });
+
+  </script>
+
+  <!-- perf measure -->
+  <script>
+    console.perfEnd();
+  </script>
+
+</body>
+</html>

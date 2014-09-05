@@ -5,7 +5,7 @@
   // * separate publishing/watching from the last mile of data -> target
   //   (iow make an API for updating DOM that a particular watch implementation
   //   can hook into)
-
+  
   var annotatedTemplatesFeature = {
     init: function() {
       this._model = this;
@@ -18,6 +18,9 @@
           this.marshalListeners(node, n.events);
           this.marshalBindings(node, n);
         }, this);
+        this.implementBindings();
+        // TODO(sjmiles): we don't necessarily want to do this here
+        this.updateBindings();
       }
     },
     marshalListeners: function(node, events) {
@@ -37,19 +40,20 @@
         var prop = annotation.value.slice(2, -2);
         this.bindings.push({
           kind: 'text',
-          mode: annotation.value[0] === '{' ? 'auto' : '', 
+          mode: node.textContent[0] === '{' ? 'auto' : '', 
           node: node,
           prop: prop
         });
+        /*
         var fn = function(value) {
-          node.textContent = value;
+          node.data = value;
         };
         if (node.textContent[0] == '{') {
-          // TODO(sjmiles): we should set up the getter/setter machinery in the prototype instead
           this.publishProperty(prop);
           this.watch(prop, fn);
         }
         fn(this._model[prop]);
+        */
       }
       // these are bindings in attributes
       var b$ = annotation.bindings;
@@ -84,9 +88,31 @@
         fn(this._model[prop]);
       }
     },
+    implementBindings: function() {
+      this.bindings.map(function(b) {
+        switch(b.kind) {
+          case 'text':
+            // behavior defined here
+            var node = b.node;
+            b.fn = function(value) {
+              node.data = value;
+            };
+            if (b.mode === 'auto') {
+              this.publishProperty(b.prop);
+              this.watch(b.prop, b.fn);
+            }
+            break;
+        }
+      }, this);
+    },
     updateBindings: function() {
       this.bindings.forEach(function(b) {
-        b.node.textContent = this._model[b.prop];
+        switch(b.kind) {
+          case 'text':
+            // data source defined here
+            b.fn(this._model[b.prop]);
+            break;
+        }
       }, this);
     }
   };

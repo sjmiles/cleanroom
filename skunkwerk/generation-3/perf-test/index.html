@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="import" href="polymer/polymer.html">
+</head>
+<body style="background-color: whitesmoke;">
+  
+  <frame-tester src="../polymer-1/projects/mail/app.html"></frame-tester>
+  <frame-tester src="../polymer-2/projects/mail/app.html"></frame-tester>
+  <frame-tester src="../polymer-3/projects/mail/app.html"></frame-tester>
+  <frame-tester src="../polymer-4/projects/mail/app.html"></frame-tester>
+  
+  <template>
+
+    <style>
+      :host {
+        display: block;
+        overflow: hidden;
+        height: 1em;
+        border: 1px solid orange;
+        padding: 8px;
+        margin: 4px;
+        background-color: white;
+      }
+      iframe {
+        border: 0;
+        width: 1024px;
+        height: 800px;
+        visibility: hidden;
+      }  
+    </style>
+    
+    <div>{{info}}</div>
+    <iframe id="frame" on-load="load"></iframe> 
+    
+  </template><script>
+  
+    Polymer({
+      name: 'frame-tester',
+      runs: 20,
+      info: 'waiting',
+      created: function() {
+        this.frame = this.$('#frame');
+      },
+      go: function() {
+        this.count = 1;
+        this.total = 0;
+        this.frame.src = this.src = this.getAttribute('src');
+      },
+      load: function() {
+        this.measure(function(time) {
+          this.total += time;
+          this.info = (this.total / this.count).toFixed(2) + 'ms, runs: ' + this.count + ' [' + this.src + ']';
+          this.updateBindings();
+          if (this.count++ < this.runs) {
+            this.frame.contentWindow.location.reload(true);
+          } else {
+            this.fire('done');
+          }
+        });
+      },
+      measure: function(next) {
+        var it = setInterval(function() {
+          var time = this.frame.contentDocument.title;
+          if (time.slice(-2) === 'ms') {
+            clearInterval(it);
+            time = Number(time.slice(0, -2));
+            next.call(this, time);
+          }
+        }.bind(this), 10);
+      }
+    });
+    
+  </script>
+
+  <script>
+    var testers = document.querySelectorAll('frame-tester');
+    var i = 0;
+    function next() {
+      var tester = testers[i++];
+      if (tester) {
+        tester.addEventListener('done', next);
+        tester.go();
+      }
+    }
+    next();
+  </script>
+  
+</body>
+</html>

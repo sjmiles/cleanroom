@@ -40,6 +40,9 @@
   Polymer({
     name: 'x-item',
     _attributes: 'horizontal center layout',
+    // neither of these features measurably improved perf
+    // do not automatically update bindings at create time, we'll do this later
+    //deferBindings: true,
     // do not automatically stamp template at create time, we'll do this later
     //deferStamp: true,
     created: function() {
@@ -66,13 +69,15 @@
       // contrary to my initial reports, each of these appear to yield roughly 
       // the same performance in the mail app
        
+      /*
       this.from = this.item.from;
       this.count = this.item.count;
       this.blurb = this.item.blurb;
       this.subject = this.item.subject;
       this.date = this.item.date;
+      */
       // use item directly as the binding-model
-      //this._model = this.item;
+      this._model = this.item;
       /*
       this._model = {
         from: this.item.from,

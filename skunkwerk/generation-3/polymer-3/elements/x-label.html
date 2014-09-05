@@ -1,0 +1,33 @@
+<template>
+
+  <style>
+    :host {
+      display: block;
+      font-size: 0.8em;
+      white-space: nowrap;
+      margin: 6px 0;
+      cursor: pointer;
+    }
+  </style>
+  
+  <span>[[text]]</span>
+</template>
+
+<script>
+(function() {
+
+  Polymer({
+    name: 'x-label',
+    created: function() {
+      this.publishProperty('item');
+      this.watch('item', this.itemChanged.bind(this));
+    },
+    itemChanged: function(item) {
+      this.style.fontWeight = item.count ? 'bold' : '';
+      this.text = item.from + ' ' + item.count;
+      this.updateBindings();
+    }
+  });
+
+})();
+</script>

@@ -1,0 +1,136 @@
+<script>
+
+  //
+  // `marshalBindings` consumes template annotations to:
+  // 
+  // 1. set up event delegation machinery
+  // 2. set up binding machinery and instance data
+  //
+  // `updateBindings` can be called to perform propagation of model data to DOM
+  // on demand
+  
+  Base.features.push({
+    init: function() {
+      this._model = this;
+      this._bindings = [];
+    },
+    marshalBindings: function() {
+      if (this._template.map) {
+        this._template.map.forEach(function(annotation) {
+          // locate instance node
+          var node = this.findAnnotatedNode(this.root, annotation);
+          // implement event-binding
+          this.marshalListeners(node, annotation.events);
+          // implement data-binding
+          this.marshalNodeBindings(node, annotation);
+        }, this);
+      }
+    },
+    // TODO(sjmiles): most of these methods should probably be prefixed with _
+    marshalListeners: function(node, events) {
+      if (events) {
+        for (var i=0, e; e=events[i]; i++) {
+          this.implementListener(node, e.name, e.value);
+        }
+      }
+    },
+    implementListener: function(node, name, method) {
+      // TODO(sjmiles): perhaps implementListener should
+      // be factored even further (i.e. into a separate module/feature?)
+      // because it's conceptually separable from the details of template 
+      // annotation processing.
+      var ctrlr = this;
+      node.addEventListener(name, function(e) {
+        if (ctrlr[method]) {
+          ctrlr[method](e, e.detail);
+        }
+      });
+    },
+    // create instanced binding data 
+    marshalNodeBindings: function(node, annotation) {
+      // TODO(sjmiles): could simplify if annotation record had a more uniform
+      // structure, see TODOs above
+      //
+      // cheat by supporting textContent bindings only in textNodes
+      // (then again, can text live anywhere else?)
+      if (annotation.kind === 'text') {
+        this._bindings.push({
+          node: node,
+          property: annotation.value,
+          // TODO(sjmiles): choose a better name for 'fn'
+          fn: this.implementTextBinding(node, annotation.value, annotation.mode)
+        });
+      } else {
+        // property/attribute bindings
+        for (var i=0, b; b=annotation.bindings[i]; i++) {
+          this._bindings.push({
+            node: node,
+            property: b.value,
+            fn: this.implementBinding(node, b.kind, b.name, b.value, b.mode)
+          });
+        }
+      }
+    },
+    implementTextBinding: function(node, property, mode) {
+      var fn = function(value) {
+        node.data = value;
+      };
+      if (mode === 'auto') {
+        // create an observable property
+        this.publishProperty(property);
+        // update the binding when changes are observed
+        this.watch(property, fn);
+      }
+      return fn;
+    },
+    implementBinding: function(node, kind, name, property, mode) {
+      // TODO(sjmiles): perhaps implementBinding should
+      // be factored even further (i.e. into a separate module/feature?)
+      // because it's conceptually separable from the details of template 
+      // annotation processing.
+      switch(kind) {
+        case 'attribute':
+          var fn = function(value) {
+            node.setAttribute(name, value);
+          };
+          break;
+        case 'property':
+          // this is a fourth type of binding that utilizes shared storage to 
+          // avoid the need to observe and propagate changes
+          // TODO(sjmiles): ad-hoc detection
+          if (node._data) {
+            this.publishProperty(property);
+            this.bindProperty(property, name, node);
+            return null;
+          }
+          // generic property binding
+          var fn = function(value) {
+            node[name] = value;
+          };
+          break;
+      }
+      // create an observable property
+      this.publishProperty(property);
+      // update the binding when changes are observed
+      this.watch(property, fn);
+      return fn;
+    },
+    updateBindings: function() {
+      var model = this._model;
+      this._bindings.forEach(function(b) {
+        // TODO(sjmiles): the `fn` are structured so as to be called directly
+        // from `watch` which supplies a `value` argument. We would instead 
+        // compose the `fn` to include the model dereference instead of taking
+        // an argument. 
+        // The conceptual propriety is unclear to me at the moment.
+        // Needing to encode `property` in `b` is a cost to the current method.
+        // Doing an extra lookup in `fn` when called from watch (or having a 
+        // conditional to avoid doing that) would be a cost the other way.
+        if (b.fn) {
+          b.fn(model[b.property]);
+        }
+      });
+    }
+  });
+
+</script>

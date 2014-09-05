@@ -1,0 +1,80 @@
+<script>
+
+  // semi-pluggable features for Base
+  
+  var features = [];
+  
+  var attributes = function(node, attr$) {
+    attr$.split(' ').forEach(function(a) {
+      node.setAttribute(a, '');
+    });
+  };
+  
+  Base = {
+    registerCallback: function() {
+      // context is a prototype, not an instance
+      var prototype = this;
+      prototype._template = window.import.querySelector('template');
+      if (prototype._template) {
+        preprocessTemplate(prototype._template);
+      }
+    },
+    createdCallback: function() {
+      this.initFeatures();
+      this.createRoot();
+      //if (!this.deferStamp) {
+        this.stampTemplate();
+      //}
+      this.installAttributes();
+      this.created();
+    },
+    created: function() {
+    },
+    initFeatures: function() {
+      features.forEach(function(f) {
+        f.init && f.init.call(this);
+      }, this);
+    },
+    //
+    // TODO(sjmiles): all the following should be 'features'?
+    //
+    createRoot: function(){
+      // TODO(sjmiles): ad hoc to switch on _template existence here
+      this.root = this._template ? this.createShadowRoot() : this;
+    },
+    stampTemplate: function() {
+      if (this._template && !this._stamped) {
+        this.root.appendChild(instanceTemplate(this._template));
+        this._stamped = true;
+        // requires annotations feature
+        this.marshalAnnotations();
+        // requires bindings feature
+        this.implementBindings();
+        // TODO(sjmiles): we don't necessarily want to do this here
+        //if (this.deferBindings) {
+          this.updateBindings();
+        //}
+      }
+    },
+    installAttributes: function() {
+      if (this._attributes) {
+        attributes(this, this._attributes);
+      }
+    },
+    $: function(slctr) {
+      return this.root.querySelector(slctr);
+    },
+    fire: function(type, detail, onNode, bubbles, cancelable) {
+      var node = onNode || this;
+      var detail = (detail === null || detail === undefined) ? {} : detail;
+      var event = new CustomEvent(type, {
+        bubbles: bubbles !== undefined ? bubbles : true,
+        cancelable: cancelable !== undefined ? cancelable : true,
+        detail: detail
+      });
+      node.dispatchEvent(event);
+      return event;
+    }
+  };
+  
+</script>

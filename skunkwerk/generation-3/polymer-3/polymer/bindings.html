@@ -1,0 +1,59 @@
+<script>
+
+  var domBindingsFeature = {
+    
+    // implement binding machinery 
+    implementBindings: function() {
+      this._bindings.forEach(function(b) {
+        // aliases to avoid property lookup in closures (b.fn functions)
+        var node = b.node, name = b.name;
+        switch(b.kind) {
+          case 'text':
+            b.fn = function(value) {
+              node.data = value;
+            };
+            if (b.mode !== 'auto') {
+              return;
+            }
+            break;
+          case 'attribute':
+            b.fn = function(value) {
+              node.setAttribute(name, value);
+            };
+            break;
+          case 'property':
+            // this is a fourth type of binding
+            // that utilizes shared storage
+            // (avoiding the need to propagate changes)
+            if (node._data) {
+              this.publishProperty(b.prop);
+              this.bindProperty(b.prop, b.name, b.node);
+              return;
+            }
+            // generic property binding
+            b.fn = function(value) {
+              node[name] = value;
+            };
+            break;
+        }
+        // create an observable property
+        this.publishProperty(b.prop);
+        // update the binding when changes are observed
+        this.watch(b.prop, b.fn);
+      }, this);
+    },
+    
+    updateBindings: function() {
+      var model = this._model;
+      this._bindings.forEach(function(b) {
+        if (b.fn) {
+          b.fn(model[b.prop]);
+        }
+      });
+    }
+    
+  };
+  
+  features.push(domBindingsFeature);
+  
+</script>

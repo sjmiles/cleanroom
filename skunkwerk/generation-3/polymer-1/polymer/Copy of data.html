@@ -1,0 +1,113 @@
+<script>
+
+function Datum(x) {
+  this.value = x;
+  // we require back references so we can 
+  // fixup references when binding two
+  // datum that each have multiple referers
+  // back references require dispose pattern
+  // for proper GC
+  // we already have this problem wrt watchers
+  this.referers = [];
+}
+
+Datum.prototype = {
+  // TODO(sjmiles): not good enough: we need to know the referrer and the name used
+  addReferer: function(referer) {
+    this.referers.push(referer);
+  },
+  removeReferer: function(referer) {
+    var i = this.referers.indexOf(referer);
+    if (i >= 0) {
+      this.referers.splice(i, 1);
+    }
+  },
+  setValue: function(value) {
+    var old = this.value;
+    if (old !== value) {
+      this.value = value;
+      this.notify(old);
+    }
+  },
+  watch: function(notifier) {
+    if (!this.watchers) {
+      this.watchers = [];
+    }
+    this.watchers.push(notifier);
+  },
+  notify: function(old) {
+    if (this.watchers) {
+      var value = this.value;
+      this.watchers.forEach(function(w) {
+        w(value, old);
+      });
+    }
+  },
+  merge: function(name, other) {
+    // transfer all watchers of other to this
+    if (other.watchers) {
+      this.watchers = (this.watchers || []).concat(other.watchers);
+      other.watchers = null;
+    }
+    // redirect all referers of other to this
+    var referers = other.referers;
+    if (referers.length) {
+      referers.forEach(function(r) {
+        r.refer(name, this);
+      });
+      other.referers = null;
+    }
+    // other's references have been set to null so it can GC
+  }
+};
+
+DataClient = {
+  init: function() {
+    this._data = {};
+  },
+  publishProperty: function(name) {
+    if (!(name in this._data)) {
+      //console.log('[%s]: publishProperty: ', this.name, name);
+      this.refer(name, new Datum(null));
+      this.defineAccessors(name);
+    }
+  },
+  defineAccessors: function(name) {
+    if (!this.__proto__.hasOwnProperty(name)) {
+      Object.defineProperty(this.__proto__, name, {
+        get: function() {
+          return this._data[name].value;
+        },
+        set: function(value) {
+          this._data[name].setValue(value);
+        }
+      });      
+    }
+  },
+  // TODO(sjmiles): when binding properties that are themselves bound,
+  // we need to do a merge, which increases the complexity considerably.
+  // Is there a different way to frame this problem?
+  bindProperty: function(name, targetName, target) {
+    // cause this[name] and target[targetName] to refer to the same datum
+    // which datum is is 'old' and which is 'new' is arbitrary atm
+    //
+    // old reference
+    var oldDatum = this._data[name];
+    // new reference
+    var newDatum = target._data[targetName];
+    // merge old into new
+    newDatum.merge(name, oldDatum);
+    // oldDatum should be free to GC now
+  },
+  refer: function(name, datum) {
+    this._data[name] = datum;
+    datum.addReferer(this);
+  },
+  watch: function(name, notify) {
+    this._data[name].watch(notify.bind(this));
+  }
+};
+
+features.push(DataClient);
+
+</script>
