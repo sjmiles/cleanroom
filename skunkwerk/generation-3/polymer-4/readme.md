@@ -32,7 +32,7 @@ Skunkwerks notes as of generation-3/polymer-4
     registerCallback() and then document.register()
   
 * base.html 
-  * Base handles all de-sugaring duties in registerCallback
+  * Base handles all de-sugaring duties in registerCallback()
   * Most of Base is implemented via mixins called 'features' that are defined
     in other modules (divide and conquer)
   
@@ -61,10 +61,10 @@ Skunkwerks notes as of generation-3/polymer-4
   * at element instance time, combines template annotations with stamped DOM, 
     implementing event and data bindings
   * `updateBindings` can be called at any time to propagate model data to DOM
-  * simple bindings can be made with [[]] syntax
-  * bindings made with {{}} syntax cause the source property to be published and
+  * simple bindings can be made with `[[]]` syntax
+  * bindings made with `{{}}` syntax cause the source property to be published and
     watched such that changes are immediately pushed to DOM  
-  * bindings of the form <name>*="{{property}}" are considered property 
+  * bindings of the form `<name>*="{{property}}"` are considered property 
     bindings. If the target is a DataClient, a DataClient binding is installed.
     Otherwise, a generic property binding is established.
   * as of now, none of this work is delegated to target nodes: there is no 
