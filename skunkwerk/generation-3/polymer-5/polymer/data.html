@@ -1,0 +1,108 @@
+<script>
+
+// TODO(sjmiles): when binding properties that are themselves bound,
+// we need to do a merge, which increases the complexity considerably.
+// Is there a different way to frame this problem?
+
+function Datum(value) {
+  this.value = value;
+  // we require back references so we can merge datums
+  // back references will require dispose pattern for GC,
+  // but then we already have this problem wrt watchers
+  // a 'referer' must be a DataClient
+  this.referers = [];
+}
+
+Datum.prototype = {
+  addReferer: function(client, name) {
+    this.referers.push({client: client, name: name});
+  },
+  setValue: function(value) {
+    var old = this.value;
+    if (old !== value) {
+      this.value = value;
+      this.notify(old);
+    }
+  },
+  watch: function(notifier) {
+    if (!this.watchers) {
+      this.watchers = [];
+    }
+    this.watchers.push(notifier);
+  },
+  notify: function(old) {
+    // TODO(sjmiles): notifications could be batched/scheduled, 
+    // synchronous notification is not necessarily good
+    if (this.watchers) {
+      var value = this.value;
+      this.watchers.forEach(function(w) {
+        w(value, old);
+      });
+    }
+  },
+  merge: function(other) {
+    // transfer all watchers of other to this
+    if (other.watchers) {
+      this.watchers = (this.watchers || []).concat(other.watchers);
+      other.watchers = null;
+    }
+    // redirect all referers of the other to this
+    var referers = other.referers;
+    if (referers.length) {
+      referers.forEach(function(r) {
+        r.client.refer(r.name, this);
+      }, this);
+      other.referers = null;
+    }
+    // other should be free to GC at this point    
+  }
+};
+
+DataClient = {
+  init: function() {
+    this._data = {};
+  },
+  publishProperty: function(name) {
+    if (!(name in this._data)) {
+      this.refer(name, new Datum(null));
+      // install accessors on our prototype (if needed)
+      Object.getPrototypeOf(this).defineAccessors(name);
+    }
+  },
+  defineAccessors: function(name) {
+    if (!this.hasOwnProperty(name)) {
+      Object.defineProperty(this, name, {
+        get: function() {
+          return this._data[name].value;
+        },
+        set: function(value) {
+          this._data[name].setValue(value);
+        }
+      });      
+    }
+  },
+  // cause this[name] and target[targetName] to refer to the same datum
+  bindProperty: function(name, targetName, target) {
+    //
+    // TODO(sjmiles): which datum is 'old' and which is 'new' is arbitrary atm 
+    // (one value is discarded)
+    //
+    // old reference
+    var oldDatum = this._data[name];
+    // new reference
+    var newDatum = target._data[targetName];
+    // merge old into new
+    newDatum.merge(oldDatum, name);
+  },
+  refer: function(name, datum) {
+    this._data[name] = datum;
+    datum.addReferer(this, name);
+  },
+  watch: function(name, notify) {
+    this._data[name].watch(notify.bind(this));
+  }
+};
+
+Base.features.push(DataClient);
+
+</script>
