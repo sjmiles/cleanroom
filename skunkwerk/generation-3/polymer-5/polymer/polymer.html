@@ -8,6 +8,7 @@
 <link rel="import" href="data.html">
 <link rel="import" href="annotations.html">
 <link rel="import" href="bindings.html">
+<link rel="import" href="publish.html">
 
 <script>
   Base.installFeatures();
@@ -18,4 +19,7 @@
     prototype.registerCallback();
     document.registerElement(prototype.name, {prototype: prototype});
   }
+  
+  Polymer.log = {
+  };
 </script>

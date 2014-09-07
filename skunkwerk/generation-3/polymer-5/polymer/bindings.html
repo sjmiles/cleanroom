@@ -47,6 +47,7 @@
       var ctrlr = this;
       node.addEventListener(name, function(e) {
         if (ctrlr[method]) {
+          Polymer.log.events && console.log('[event-binding]: %s -> %s.%s', name, ctrlr.localName, method)
           ctrlr[method](e, e.detail);
         }
       });
@@ -64,14 +65,18 @@
           break;
         case 'attribute':
           var fn = function(value) {
-            node.setAttribute(name, value);
+            if (typeof value === 'boolean') {
+              node[value ? 'setAttribute' : 'removeAttribute'](name, '');
+            } else {
+              node.setAttribute(name, value);
+            }
           };
           break;
         case 'property':
           // this is a fourth type of binding that utilizes shared storage to 
           // avoid the need to observe and propagate changes
-          // TODO(sjmiles): ad-hoc detection
-          if (node._data) {
+          // TODO(sjmiles): ad-hoc DataClient detection
+          if (node._data && (name in node._data)) {
             this.publishProperty(property);
             this.bindProperty(property, name, node);
             return null;

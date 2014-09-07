@@ -82,6 +82,7 @@ DataClient = {
     }
   },
   // cause this[name] and target[targetName] to refer to the same datum
+  // TODO(sjmiles): change call signature to (name, target[, targetName])
   bindProperty: function(name, targetName, target) {
     //
     // TODO(sjmiles): which datum is 'old' and which is 'new' is arbitrary atm 

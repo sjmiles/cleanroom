@@ -96,7 +96,7 @@ TODO(sjmiles): this module should produce either syntactic metadata
             }
             annotation.bindings.push({
               kind: kind,
-              mode: escape === '{{}' ? 'auto' : '',
+              mode: escape === '{{' ? 'auto' : '',
               name: n,
               value: v.slice(2, -2)
             });

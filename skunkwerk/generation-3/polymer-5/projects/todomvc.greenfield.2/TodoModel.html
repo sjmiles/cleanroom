@@ -1,0 +1,84 @@
+<script>
+  
+  TodoModel = function(items) {
+    DataClient.init.call(this);
+    publishFeature.init.call(this);
+  };
+  var p = TodoModel.prototype = Object.create(DataClient);
+  extend(p, publishFeature);
+  extend(p, {
+    published: [
+      'items',
+      'count',
+      'completed',
+      'filter',
+      'filtered'
+    ],
+    push: function(item) {
+      this.items.push(item);
+      this.itemsChanged();
+    },
+    remove: function(item) {
+      var i = this.items.indexOf(item);
+      this.items.splice(i, 1);
+      this.itemsChanged();
+    },
+    // TODO(sjmiles): items/filter is a good example of 
+    // entangled data (see also: count/completed in the view).
+    //
+    // Changes to either need to trigger a refilter.
+    // Sync changes to both should only trigger one refilter.
+    // 
+    // There are various ad hoc ways to ignore this problem
+    // but they lead to Bad Things (tm). Debouncing properly
+    // is important.
+    //
+    // TODO(sjmiles): debounce computeFiltered
+    itemsChanged: function() {
+      this.computeCompleted();
+      this.computeCount();
+      this.computeFiltered();
+    },
+    filterChanged: function() {
+      this.computeFiltered();
+    },
+    computeCount: function() {
+      this.count = compute(this.items);
+      // TODO(sjmiles): weird syntax is to highlight the state-free function 
+      function compute(items) {
+        return items.length;
+      }
+    },
+    computeCompleted: function() {
+      this.completed = compute(this.items);
+      // TODO(sjmiles): weird syntax is to highlight the state-free function 
+      function compute(items) {
+        var completed = 0;
+        items.forEach(function(i) {
+          i.completed && completed++;
+        });
+        return completed;
+      }
+    },
+    computeFiltered: function(filters, filter, items) {
+      this.filtered = compute(this.filters, this.filter, this.items);
+      // TODO(sjmiles): weird syntax is to highlight the state-free function 
+      function compute(filters, filter, items) {
+        var fn = filters[filter];
+        // TODO(sjmiles): we cannot return `items` itself
+        // because manipulations to `items` (add/remove)
+        // are invisible to observers of `filtered`.
+        return fn ? items.filter(fn) : items.slice(0);
+      }
+    },
+    filters: {
+      active: function(item) {
+        return !item.completed;
+      },
+      completed: function(item) {
+        return item.completed;
+      }
+    }
+  });
+
+</script>

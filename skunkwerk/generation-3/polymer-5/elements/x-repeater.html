@@ -28,11 +28,11 @@
         this.kind = this.getAttribute('kind');
       }
     },
-    itemsChanged: function(items) {
+    itemsChanged: function() {
       this.root.textContent = '';
       //this.stampTemplate();
-      if (items) {
-        for (var i=0, row, item; item=items[i]; i++) {
+      if (this.items) {
+        for (var i=0, row, item; item=this.items[i]; i++) {
           row = document.createElement(this.kind);
           row.item = item;
           this.root.appendChild(row);

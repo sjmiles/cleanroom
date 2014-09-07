@@ -1,0 +1,88 @@
+<!--
+    @license
+    Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+    This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+    The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+    The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+    Code distributed by Google as part of the polymer project is also
+    subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<template>
+  
+  <style>
+    input::-webkit-input-placeholder {
+      font-style: italic;
+      color: #a9a9a9;
+    }
+    
+    input::-moz-placeholder {
+      font-style: italic;
+      color: #a9a9a9;
+    }
+    
+    input:-ms-input-placeholder {
+      font-style: italic;
+      color: #a9a9a9;
+    }
+    
+    input {
+      margin: 0;
+      font-size: 24px;
+      font-family: inherit;
+      line-height: 1.4em;
+      border: none;
+      outline: none;
+      color: inherit;
+      padding: 6px;
+      xborder: 1px solid #999;
+      xbox-shadow: inset 0 -1px 5px 0 rgba(0, 0, 0, 0.2);
+      -webkit-box-sizing: border-box;
+      -moz-box-sizing: border-box;
+      -ms-box-sizing: border-box;
+      -o-box-sizing: border-box;
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+      -moz-font-smoothing: antialiased;
+      -ms-font-smoothing: antialiased;
+      -o-font-smoothing: antialiased;
+      font-smoothing: antialiased;
+      /**/
+      xpadding: 16px 16px 16px 60px;
+      xborder: none;
+      background: rgba(0, 0, 0, 0);
+      xz-index: 2;
+      xbox-shadow: none;
+     }
+  </style>
+  
+  <input flex placeholder="What needs to be done?" autofocus on-keyup="keyupAction" on-keypress="keypressAction" value*="{{value}}">
+
+</template><script>
+	(function() {
+	  
+		var ENTER_KEY = 13;
+		var ESC_KEY = 27;
+		
+		Polymer({
+		  name: 'td-input',
+		  _attributes: 'horizontal layout',
+		  created: function() {
+		    this.publishProperty('value');
+		  },
+      // Listen for enter on keypress but esc on keyup, because
+      // IE doesn't fire keyup for enter.
+			keypressAction: function(e, detail, sender) {
+				if (e.keyCode === ENTER_KEY) {
+					this.fire('td-input-commit');
+				}
+			},
+			keyupAction: function(e, detail, sender) {
+				if (e.keyCode === ESC_KEY) {
+					this.fire('td-input-cancel');
+				}
+			}
+		});
+		
+	})();
+</script>

@@ -34,6 +34,8 @@
       //}
       this.installAttributes();
       this.created();
+      // requires bindings feature
+      this.updateBindings();
     },
     created: function() {
     },
@@ -57,7 +59,7 @@
         this.marshalBindings();
         // TODO(sjmiles): we don't necessarily want to do this here
         //if (this.deferBindings) {
-          this.updateBindings();
+        //  this.updateBindings();
         //}
       }
     },

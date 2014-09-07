@@ -1,0 +1,207 @@
+<!doctype html>
+<!--
+@license
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+<html lang="en" data-framework="polymer">
+<head>
+
+	<meta charset="utf-8">
+
+	<title>Polymer • TodoMVC</title>
+
+  <link rel="import" href="../../elements/x-repeater.html">
+  <link rel="import" href="td-input.html">
+  <link rel="import" href="td-todo.html">
+  <link rel="import" href="td-radiogroup.html">
+  
+  <style>
+    td-app {
+      margin: auto;
+      width: 700px;
+      background-color: whitesmoke;
+      font-family: sans-serif;
+    }
+  </style>
+</head>
+<body>
+
+<td-app></td-app>
+
+<template>
+  
+  <style>
+    :host {
+      display: block;
+    }
+    status-bar {
+      padding: 6px 12px;
+      background-color: #eaeaea;
+    }
+  </style>
+  
+  <td-input placeholder="What to do?" on-keypress="keypress"></td-input>
+  
+  <x-repeater kind="td-todo" items*="{{filtered}}"></x-repeater>
+  
+  <status-bar horizontal center layout>
+  
+    <span>{{leftText}}</span>
+    
+    <span flex></span>
+    
+    <td-radiogroup selected*="{{filter}}">
+      <label><input type="radio" name="filter" id="all">All</label>
+      <label><input type="radio" name="filter" id="active">Active</label>
+      <label><input type="radio" name="filter" id="completed">Completed</label>
+    </td-radiogroup>
+    
+    <span flex></span>
+    
+    <button>{{completedText}}</button>
+    
+  </status-bar>
+  
+</template><script>
+
+  //Polymer.log.events = true;
+  
+  //
+  // TODO(sjmiles): I've attempted to arrange all of the calculations below
+  // into a shape that uses triggers to perform stateless computations.
+  // By regularizing the behavior, we open the door to automation/sugaring.
+  //
+  // Behaviors that currently require manual triggering include:
+  //
+  // - array modifications
+  // - compound triggers (require debouncing, 
+  //   e.g. items/filter and completed/leftText)
+  // - event triggers (`item-changed`) 
+  //
+  
+  Polymer({
+    name: 'td-app',
+    _attributes: 'vertical layout',
+    published: [
+      'items',
+      'filter',
+      // TODO(sjmiles): not public api
+      'completed'
+    ],
+    created: function() {
+      this.listen('item-changed', 'itemsChanged');
+      this.listen('item-remove', 'removeItem');
+      this.items = [
+        {value: 'Extend the web'},
+        {value: 'Dethrone native apps'}, 
+        {value: 'Party'}
+      ];
+      this.filter = 'all';
+    },
+    keypress: function(e) {
+      if (e.keyCode === e.keys.ENTER_KEY) {
+        this.addItem();
+      }
+    },
+    addItem: function() {
+      // TODO(sjmiles): using binding to deal with `td-input.value`
+      this.items.push({value: this.$('td-input').value});
+      this.itemsChanged();
+      this.$('td-input').value = '';
+    },
+    removeItem: function(e, item) {
+      var i = this.items.indexOf(item);
+      this.items.splice(i, 1);
+      this.itemsChanged();
+    },
+    // TODO(sjmiles): items and filter are a good example of entangled
+    // data. 
+    //
+    // Changes to either need to trigger a refilter.
+    // Sync changes to both should only trigger one refilter.
+    // 
+    // There are various ad hoc ways to ignore this problem
+    // but they lead to Bad Things (tm). Debouncing properly
+    // (as seen here) is important.
+    itemsChanged: function() {
+      // TODO(sjmiles): computed value 'completed' depends on `items`
+      this.computeCompleted();
+      // TODO(sjmiles): computed value 'leftText' depends on `items`
+      // AND `completed` (this is not debounced properly)
+      this.computeLeftText();
+      // TODO(sjmiles): computed value 'filter' depends on `items`
+      this.invalidateFilter();
+    },
+    filterChanged: function() {
+      this.invalidateFilter();
+    },
+    invalidateFilter: function() {
+      if (!this.filterInvalid) {
+        this.filterInvalid = true;
+        // TODO(sjmiles): Style recalculation can occur before we get
+        // the thread back. Pursue lower latency asynchrony.
+        requestAnimationFrame(this.validateFilter.bind(this));
+        // TODO(sjmiles): At start, causes visible flash while we wait for 
+        // changes to debounce.
+        //setTimeout(this.validateFilter.bind(this));
+      }
+    },
+    validateFilter: function() {
+      // TODO(sjmiles): computed value 'filtered' depends on `validateFilter`
+      this.computeFiltered();
+      this.filterInvalid = false;
+    },
+    computeCompleted: function() {
+      this.completed = (function(items) {
+        var completed = 0;
+        items.forEach(function(i) {
+          i.completed && completed++;
+        });
+        return completed;
+      })(this.items);
+    },
+    completedChanged: function() {
+      // TODO(sjmiles): `completed` is a dependency for these computations
+      this.$('button').style.visibility = this.completed ? '' : 'hidden';
+      this.computeCompletedText();
+      this.computeLeftText();
+    },
+    computeCompletedText: function() {
+      this.completedText = (function(completed) {
+        return 'Clear completed (' + completed + ')';
+      })(this.completed);
+    },
+    computeLeftText: function() {
+      this.leftText = (function(items, completed) {
+        var left = items.length - completed;
+        return left + (left === 1 ? ' item' : ' items') + ' left';
+      })(this.items, this.completed);
+    },
+    computeFiltered: function() {
+      this.filtered = (function(filters, filter, items) {
+        var fn = filters[filter];
+        // TODO(sjmiles): we cannot return `items` itself
+        // because manipulations to `items` (add/remove)
+        // are invisible to the `filtered` observer.
+        return fn ? items.filter(fn) : items.slice(0);
+      })(this.filters, this.filter, this.items);
+    },
+    filters: {
+      active: function(item) {
+        return !item.completed;
+      },
+      completed: function(item) {
+        return item.completed;
+      }
+    }
+  });
+  
+</script>
+	
+</body>
+</html>
