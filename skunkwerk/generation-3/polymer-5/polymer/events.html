@@ -1,0 +1,38 @@
+<script>
+  
+  eventsFeature = {
+    listeners: {},
+    init: function() {
+      this.listenListeners();
+    },
+    listenListeners: function() {
+      for (var n in this.listeners) {
+        this.listen(n, this.listeners[n]);
+      }
+    },
+    listen: function(event, methodName) {
+      this.addEventListener(event, this[methodName].bind(this));
+    },
+    fire: function(type, detail, onNode, bubbles, cancelable) {
+      var node = onNode || this;
+      var detail = (detail === null || detail === undefined) ? {} : detail;
+      var event = new CustomEvent(type, {
+        bubbles: bubbles !== undefined ? bubbles : true,
+        cancelable: cancelable !== undefined ? cancelable : true,
+        detail: detail
+      });
+      node.dispatchEvent(event);
+      return event;
+    },
+    eventBind: function(event, node, value, model, property) {
+      node.addEventListener(event, function(e) {
+        model[property] = e.target[value];
+        Polymer.log.events && console.log('[eventBind]: %s.%s = %s', 
+          e.target.localName, value, e.target[value]);
+      });
+    }
+  };
+
+  Base.features.push(eventsFeature);
+  
+</script>

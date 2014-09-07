@@ -30,7 +30,7 @@
     completedChanged: function() {
       this.$('td-input').style.color = this.completed ? 'silver' : '';
       this.item.completed = this.completed;
-      this.fire('item-changed');
+      this.fire('item-change');
     },
     remove: function() {
       this.fire('item-remove', this.item);
