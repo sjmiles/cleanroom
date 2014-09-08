@@ -10,7 +10,7 @@
     }
   </style>
   
-  <span>[[text]]</span>
+  <span>[[from]]</span> <span>[[count]]</span>
 </template>
 
 <script>
@@ -18,14 +18,14 @@
 
   Polymer({
     name: 'x-label',
-    created: function() {
-      this.publishProperty('item');
-      this.watch('item', this.itemChanged.bind(this));
-    },
+    published: [
+      'item'
+    ],
     itemChanged: function(item) {
-      this.style.fontWeight = item.count ? 'bold' : '';
-      this.text = item.from + ' ' + item.count;
+      this.from = item.from;
+      this.count = item.count;
       this.updateBindings();
+      this.style.fontWeight = item.count ? 'bold' : '';
     }
   });
 

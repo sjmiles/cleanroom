@@ -28,10 +28,9 @@
   
   Polymer({
     name: 'x-contact-item',
-    created: function() {
-      this.publishProperty('item');
-      this.watch('item', this.itemChanged.bind(this));
-    },
+    published: [
+      'item'
+    ],
     itemChanged: function(item) {
       this.avatar = 'assets/avatar-0' + (index++ % 5) + '.png';
       this.text = item.from + ' ' + item.count;

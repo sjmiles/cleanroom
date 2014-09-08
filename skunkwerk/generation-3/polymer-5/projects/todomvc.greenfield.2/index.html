@@ -46,7 +46,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     }
   </style>
 
-  <td-input placeholder="What to do?" on-keypress="keypress"></td-input>
+  <td-input placeholder="What to do?" on-keypress="keypress" value*="{{newValue}}"></td-input>
 
   <x-repeater kind="td-todo" items*="{{filtered}}"></x-repeater>
 
@@ -71,22 +71,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   //Polymer.log.events = true;
   Polymer.log.watches = true;
 
-  //
-  // TODO(sjmiles): Behaviors that currently require manual triggering include:
-  //
-  // - array modifications
+  // TODO(sjmiles): Behaviors that currently require manual notify:
   // - event triggers (`item-changed`) 
-  //
 
   Polymer({
     name: 'td-app',
     _attributes: 'vertical layout',
     // TODO(sjmiles): might need new name. `Publish` no longer means 
     // 'make public', now it means 'make bindable/observable'
+    // e.g. `completed` is not intended to be public API
     published: [
       'items',
       'filter',
-      // TODO(sjmiles): not public api, but we want to bind/observe
       'completed'
     ],
     listeners: {
@@ -99,8 +95,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     },
     created: function() {
       this.model = new TodoModel();
-      this.bindModel(this.model, 
-        ['items', 'filter', 'filtered', 'completed']);
+      // TODO(sjmiles): ad-hoc
+      // Perhaps if we supported binding to paths we could
+      // avoid this bit.
+      // e.g. items*="{{filtered}}" becomes items*="{{model.filtered}}"
+      // also 'leftText': 'computeLeftText(items, completed)' becomes
+      // 'leftText': 'computeLeftText(model.items, model.completed)'
+      // In this case since 'model' is a DataClient, observation is free.
+      // Can we do this simply? What about non-DataClient properties?
+      // This feature would also simplify mail/x-item, which binds a series
+      // of fields from a POJO to DOM. x-item already understands that  
+      // the POJO properties are not watched.  
+      this.bindModel(this.model, ['items', 'filter', 'filtered', 'completed']);
       this.items = [
         {value: 'Party'},
         {value: 'Dethrone native apps'}, 
@@ -114,10 +120,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       }
     },
     itemAdd: function() {
-      // TODO(sjmiles): use binding for `td-input.value`
-      var value = this.$('td-input').value;
-      this.$('td-input').value = '';
-      this.model.push({value: value});
+      this.model.add({value: this.newValue});
+      this.newValue = '';
     },
     itemRemove: function(e, item) {
       this.model.remove(item);

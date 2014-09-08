@@ -39,30 +39,25 @@
 
   Polymer({
     name: 'x-item',
+    published: [
+      'item'
+    ],
     _attributes: 'horizontal center layout',
-    // neither of these features measurably improved perf
+    //
+    // TODO(sjmiles): neither of these features measurably improved perf
     // do not automatically update bindings at create time, we'll do this later
     //deferBindings: true,
     // do not automatically stamp template at create time, we'll do this later
     //deferStamp: true,
-    created: function() {
-      this.publishProperty('model');
-      this.watch('model', this.modelChanged);
-      //
-      this.publishProperty('item');
-      this.watch('item', this.itemChanged);
-      //
-      this.bindProperty('item', 'model', this);
-    },
-    modelChanged: function() {
-      this._model = this.model;
-      this.updateBindings();
-    },
+    //
     // observing the particulars of item is potentially expensive
     // instead we provide this manual API to provoke processing of 'item'
     itemChanged: function() {
+      // update binding model directly
+      this._model = this.item;
+      this.updateBindings();
       // manual DOM updates
-      var read = Date.parse(this.item.date) + 16*24*60*60*1000 < Date.now();
+      var read = Date.parse(this.item.date) + 24*24*60*60*1000 < Date.now();
       this.style.fontWeight = read ? '' : 'bold';
       this.style.backgroundColor = read ? '#f8f8f8' : '';
     },

@@ -1,4 +1,5 @@
 <template>
+
   <style>
     :host {
       display: inline-block;
@@ -9,21 +10,31 @@
       color: inherit;
     }
   </style>
-  <input flex placeholder="[[placeholder]]" value*="[[value]]">
+
+  <input flex placeholder="[[placeholder]]" value*="{{value}}" 
+    on-input="inputCommit">
+
 </template><script>
+
   Polymer({
     name: 'td-input',
     _attributes: 'vertical layout',
+    published: [
+      'value'
+    ],
     created: function() {
       this.input = this.$('input');
       this.placeholder = this.getAttribute('placeholder');
-      this.value = this.getAttribute('value') || '';
     },
-    get value() {
+    inputCommit: function() {
+      this.value = this.inputValue;
+    },
+    get inputValue() {
       return this.input.value;
     },
-    set value(value) {
+    set inputValue(value) {
       this.input.value = value;
     }
   });
+
 </script>

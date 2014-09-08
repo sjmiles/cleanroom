@@ -25,6 +25,12 @@
         // requires annotations feature
         prototype.parseTemplateAnnotations(prototype._template);
       }
+      // make a list of names that have properties of the form <name>Changed.
+      // DataClient can use this list to efficiently associate *Changed 
+      // methods with published properties.
+      // TODO(sjmiles): maybe remove this feature completely in favor of 
+      // explicit annotations in the prototype.  
+      //prototype.precomputeNotifierCandidates();
     },
     createdCallback: function() {
       this.initFeatures();

@@ -25,19 +25,14 @@
       completed: 'computeCompleted(items)',
       filtered: 'computeFiltered(items, filter)'
     },
-    // TODO(sjmiles): create an array-abstraction that handles this 
-    // automatically? Or maybe a 'mutate' method, like:
-    // this.mutate('items', function(items) {
-    //  items.push(item);
-    // });
-    push: function(item) {
+    // TODO(sjmiles): array mutations not observable via set-trap.
+    //  see data.html for experimental array decoration.
+    add: function(item) {
       this.items.push(item);
-      this.itemChange();
     },
     remove: function(item) {
       var i = this.items.indexOf(item);
       this.items.splice(i, 1);
-      this.itemChange();
     },
     itemChange: function() {
       this.notifyChange('items');

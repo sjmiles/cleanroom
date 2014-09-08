@@ -6,6 +6,41 @@
 
 // TODO(sjmiles): implement dispose
 
+/*
+ * Datum wraps a concrete data value and provides:
+ * 
+ * - persistent shareable reference
+ * - synchronous notifications on mutations (via method-traps)
+ * 
+ * Multiple DataClients can refer to a single Datum instance. If any of the 
+ * clients change the concrete value, the new value is immediately available
+ * to all the others (single source of truth).
+ * 
+ * e.g. given
+ *   foo.datum = datum1
+ *   bar.datum = datum1
+ * then obviously:
+ *   foo.datum.value == bar.datum.value
+ * 
+ * But now foo and bar can construct accessors such that:
+ *   foo.baz => get() { return this.datum.value };   
+ *   bar.zot => get() { return this.datum.value };  
+ * now, less obviously:
+ *   foo.baz === bar.zot
+ * 
+ * This is the data-binding gambit.     
+ * 
+ * The `watch` method registers a callback function to be invoked
+ * synchronously on data mutations.
+ * 
+ * Watch callbacks are triggered when:
+ *  - data is changed via setValue
+ *  - any of various Array methods are called value (when value is Array)
+ *  - `notify` method is called directly
+ * 
+ * `merge` method collapses a DataClient into this one, combining
+ * all watchers and referers.
+ */
 function Datum(value) {
   this.value = value;
   // we require back references so we can merge datums
@@ -17,11 +52,32 @@ function Datum(value) {
 
 Datum.prototype = {
   addReferer: function(client, name) {
+    // TODO(sjmiles): `client` has to be a DataClient right now, could be 
+    // generalized.
+    // TODO(sjmiles): storing this data seems wrong, the Datum doesn't need
+    // to know these details except for merging. Perhaps we should take
+    // a function argument, and let the caller supply a closure with the 
+    // necessary bookkeeping. 
     this.referers.push({client: client, name: name});
   },
+  watch: function(notifier) {
+    if (!this.watchers) {
+      this.watchers = [];
+    }
+    this.watchers.push(notifier);
+  },
+  // TODO(sjmiles): use accessors?
+  // TODO(sjmiles): factor out Array decoration
   setValue: function(value) {
     var old = this.value;
     if (old !== value) {
+      // TODO(sjmiles): experimental
+      if (value instanceof Array) {
+        //console.log('decorating Array');
+        // TODO(sjmiles): how costly is this?
+        extend(value, ArrayTrap);
+        value.client = this;
+      }
       this.value = value;
       this.notify(old);
     }
@@ -33,12 +89,6 @@ Datum.prototype = {
         w(value, old);
       });
     }
-  },
-  watch: function(notifier) {
-    if (!this.watchers) {
-      this.watchers = [];
-    }
-    this.watchers.push(notifier);
   },
   merge: function(other) {
     // transfer all watchers of `other` to `this`
@@ -58,6 +108,47 @@ Datum.prototype = {
   }
 };
 
+ArrayTrap = Object.create(null);
+['push', 'pop', 'shift', 'unshift', 'splice'].forEach(function(n) {
+  ArrayTrap[n] = function() {
+    console.log('Array.%s notify', n);
+    Array.prototype[n].apply(this, arguments);
+    this.client.notify(this);
+  };
+});
+
+/*
+ * DataClient implements a data-store whose properties can be:
+ * 
+ * - shared among DataClients (aka _bound_)
+ * - observed for mutations
+ * - computed from dependent properties
+ * 
+ * `Publishing` a property on a DataClient:
+ * 
+ * - creates a Datum instance mapped to the property name
+ * - installs (as needed) get/set accessors (on the prototype) for the
+ *   property name that reference the mapped Datum instance.
+ * - if a method called `<name>Changed` exists, use this 
+ *   method as a `watch` callback. 
+ * 
+ * A sugaring system is implemented to set up relationships at
+ * init-time from meta-data declarations on the instance.
+ * 
+ * // `published` identifies property names to publish at init-time.
+ * // TODO(sjmiles): use a map to support initial values
+ * published: [
+ *   'foo',
+ *   'bar'
+ * ]
+ * // `watched` object maps properties to names of methods to use for `watch`
+ * // callbacks. Compound watches are supported.
+ * published: [
+ *   foo: 'doUpdates',
+ *   'foo bar baz': 'otherUpdates'
+ * ]
+ *  
+ */
 DataClient = {
   published: [],
   watched: {},
@@ -73,14 +164,39 @@ DataClient = {
   },
   publishProperty: function(property) {
     this._defineProperty(property);
+    // auto-watch feature
+    // TODO(sjmiles): consider eliminating this feature in favor
+    // of explicit annotation
     var watchName = property + 'Changed';
-    // TODO(sjmiles): either test is extremely slow, perhaps
-    // we remove this feature, and instead have elements
-    // generate watches from a list precomputed at registration time
-    //if (watchName in this) {
-    if (this[watchName]) {
-      this.watch(property, this[watchName]);
+    /*
+    if (this._hasNotifier) {
+      if (!this._hasNotifier[property]) {
+        return;
+      }
+    } else {
+    */
+      // TODO(sjmiles): either test is extremely slow
+      // TODO(sjmiles): slowness of this test was exaggerated by red-herring:
+      // some last-gen elements (x-repeater) binding *Changed methods manually
+      // causing double updates.
+      //if (!(watchName in this)) {
+      if (!this[watchName]) {
+        return;
+      }
+    //}
+    this.watch(property, this[watchName]);
+  },
+  precomputeNotifierCandidates: function() {
+    // TODO(sjmiles): implemented due to bogus results as described above
+    /*
+    this._hasNotifier = {};
+    // TODO(sjmiles): seems simple, fraught with performance danger
+    for (var n in this) {
+      if (n.slice(-7) === 'Changed') {
+        this._hasNotifier[n.slice(0, -7)] = true;
+      }
     }
+    */
   },
   notifyChange: function(name) {
     var datum = this._data[name];
@@ -106,7 +222,6 @@ DataClient = {
     var args = parts[2].replace(/ /g, '').split(',');
     this.compoundWatch(args, function() {
       Polymer.log.watches && console.log('[defineComputedProperty]: computing [%s]', name, arguments);
-      // this.filtered = this.computeFiltered(items, filtered)
       this[name] = method.apply(this, arguments);
     });
   },
