@@ -11,8 +11,7 @@
     }
   </style>
 
-  <input flex placeholder="[[placeholder]]" value*="{{value}}" 
-    on-input="inputCommit">
+  <input flex placeholder="[[placeholder]]" value*="{{value}}">
 
 </template><script>
 
@@ -25,15 +24,7 @@
     created: function() {
       this.input = this.$('input');
       this.placeholder = this.getAttribute('placeholder');
-    },
-    inputCommit: function() {
-      this.value = this.inputValue;
-    },
-    get inputValue() {
-      return this.input.value;
-    },
-    set inputValue(value) {
-      this.input.value = value;
+      this.eventBind('input', this.input, 'value', this, 'value');
     }
   });
 
