@@ -1,0 +1,89 @@
+<link rel="import" href="../../../elements/x-icon.html">
+<link rel="import" href="../../../elements/x-repeater.html">
+<link rel="import" href="pi-item.html">
+
+<template>
+
+<style>
+  :host {
+    background-color: #fafafa;
+  }
+  #drawer {
+    width: 256px; 
+    background-color: white;
+    box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.35)
+  }  
+  [header] {
+    height: 96px;
+    padding: 16px;
+    font-size: 1.3em;
+  }
+  [header] > * {
+    margin-right: 8px;
+  }
+  #drawer [header] {
+    color: #fafafa;
+    background-color: #02a8f3;
+  }
+  #main [header] {
+    color: #fafafa;
+    background-color: #069bde;
+  }
+  [menu]{
+    color: gray;
+    padding: 20px 0 0 16px;
+  }
+  [menu] > * {
+    margin-bottom: 16px;
+  }
+  [menu] x-icon {
+    margin-right: 16px;
+  }
+  x-repeater {
+    margin: 16px 32px;
+    display: flex !important;
+  }
+</style>
+
+<div id="drawer" vertical layout>
+  <div header>Pica</div>
+  <div flex scroll vertical layout menu>
+    <span><x-icon icon="apps"></x-icon>Home</span>
+    <span><x-icon icon="apps"></x-icon>Topics</span>
+    <span><x-icon icon="apps"></x-icon>Explore</span>
+    <span><x-icon icon="apps"></x-icon>Accounts</span>
+  </div>
+</div>
+
+<div id="main" flex vertical layout>
+  <div header horizontal layout>
+    <x-icon icon="apps"></x-icon>
+    <span flex>Topics</span>
+    <x-icon icon="apps"></x-icon>
+    <x-icon icon="apps"></x-icon>
+  </div>
+  
+  <x-repeater flex horizontal center-justified wrap layout kind="pi-item" items*="{{items}}"></x-repeater>
+  
+</div>  
+
+</template><script>
+
+  Polymer({
+    name: 'pi-app',
+    _attributes: 'horizontal layout',
+    created: function() {
+      this.items = [
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+        {}
+      ];
+    }
+  });
+   
+</script>

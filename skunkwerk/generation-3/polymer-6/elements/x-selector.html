@@ -1,0 +1,16 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<script>
+
+  Polymer({
+    name: 'x-selector',
+    created: function() {
+      this.addEventListener('click', this.click.bind(this));
+      this.publishProperty('selected');
+    },
+    click: function(e) {
+      this.selected = e.target;
+    }
+  });
+
+</script>

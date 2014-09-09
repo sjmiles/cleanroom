@@ -1,0 +1,40 @@
+<template>
+
+  <style>
+    :host {
+      padding: 8px;
+    }
+  </style>
+  
+  <input type="checkbox" checked="[[completed]]">
+  <td-input flex placeholder="What to do?" value*="[[value]]"></td-input>
+  &nbsp;<button on-click="remove">x</button>
+  
+</template><script>
+
+  Polymer({
+    name: 'td-todo',
+    _attributes: 'horizontal layout center',
+    published: [
+      'item', 
+      'completed'
+    ],
+    created: function() {
+      this.eventBind('change', this.$('input'), 'checked', this, 'completed');
+    },
+    itemChanged: function() {
+      this.value = this.item.value;
+      this.completed = Boolean(this.item.completed);
+      this.updateBindings();
+    },
+    completedChanged: function() {
+      this.$('td-input').style.color = this.completed ? 'silver' : '';
+      this.item.completed = this.completed;
+      this.fire('item-change');
+    },
+    remove: function() {
+      this.fire('item-remove', this.item);
+    }
+  });
+
+</script>

@@ -1,0 +1,62 @@
+<script>
+  
+  TodoModel = function(items) {
+    this.init();
+  };
+  
+  var p = TodoModel.prototype = Object.create(DataClient);
+  
+  extend(p, {
+    published: [
+      'items',
+      'filter',
+    ],
+    // TODO(sjmiles): items/filter is a good example of 
+    // entangled data (see also: count/completed in the view).
+    //
+    // Changes to either need to trigger a refilter.
+    // Sync changes to both should only trigger one refilter.
+    // 
+    // These entries create compound watches that use an async
+    // debouncing mechanism.
+    computed: {
+      completed: 'computeCompleted(items)',
+      filtered: 'computeFiltered(items, filter)'
+    },
+    // TODO(sjmiles): array mutations not observable via set-trap.
+    //  see data.html for experimental array decoration.
+    add: function(item) {
+      this.items.push(item);
+    },
+    remove: function(item) {
+      var i = this.items.indexOf(item);
+      this.items.splice(i, 1);
+    },
+    itemChange: function() {
+      this.notifyChange('items');
+    },
+    computeCompleted: function(items) {
+      var completed = 0;
+      items.forEach(function(i) {
+        i.completed && completed++;
+      });
+      return completed;
+    },
+    computeFiltered: function(items, filter) {
+      var fn = this.filters[filter];
+      // TODO(sjmiles): we cannot return `items` itself
+      // because manipulations to `items` (add/remove)
+      // are invisible to observers of `filtered`.
+      return fn ? items.filter(fn) : items.slice(0);
+    },
+    filters: {
+      active: function(item) {
+        return !item.completed;
+      },
+      completed: function(item) {
+        return item.completed;
+      }
+    }
+  });
+
+</script>
