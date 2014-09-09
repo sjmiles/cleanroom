@@ -10,8 +10,10 @@
         this.listen(n, this.listeners[n]);
       }
     },
-    listen: function(event, methodName) {
-      this.addEventListener(event, this[methodName].bind(this));
+    listen: function(eventName, methodName) {
+      this.addEventListener(eventName, function(e) {
+        this[methodName](e, e.detail);
+      }.bind(this));
     },
     fire: function(type, detail, onNode, bubbles, cancelable) {
       var node = onNode || this;
@@ -24,11 +26,11 @@
       node.dispatchEvent(event);
       return event;
     },
-    eventBind: function(event, node, value, model, property) {
-      node.addEventListener(event, function(e) {
-        model[property] = e.target[value];
+    eventBind: function(eventName, node, targetValue, model, property) {
+      node.addEventListener(eventName, function(e) {
+        model[property] = e.target[targetValue];
         Polymer.log.events && console.log('[eventBind]: %s.%s = %s', 
-          e.target.localName, value, e.target[value]);
+          e.target.localName, targetValue, e.target[targetValue]);
       });
     }
   };

@@ -76,6 +76,7 @@ Datum.prototype = {
         //console.log('decorating Array');
         // TODO(sjmiles): how costly is this?
         extend(value, ArrayTrap);
+        // TODO(sjmiles): binding client this way is problematic
         value.client = this;
       }
       this.value = value;
@@ -140,12 +141,19 @@ ArrayTrap = Object.create(null);
  * published: [
  *   'foo',
  *   'bar'
- * ]
+ * ],
  * // `watched` object maps properties to names of methods to use for `watch`
  * // callbacks. Compound watches are supported.
  * published: [
  *   foo: 'doUpdates',
  *   'foo bar baz': 'otherUpdates'
+ * ],
+ * // `computed` object maps properties to faux method-invocations. The 
+ * // right-side is parsed to construct a CompoundWatch whose notify callback 
+ * // computes the value of the left-side.
+ * computed: [
+ *   foo: 'computeFoo(bar)',
+ *   baz: 'computeBaz(foo, zot, narg)'
  * ]
  *  
  */
@@ -227,6 +235,7 @@ DataClient = {
   },
   compoundWatch: function(names, notify) {
     // TODO(sjmiles): needs factoring
+    //
     // fallback to normal watch if we are not truly compound
     if (names.length === 1) {
       this.watch(names[0], notify);
@@ -269,6 +278,8 @@ DataClient = {
     // merge old into new
     target._data[targetName].merge(this._data[name], name);
   },
+  // TODO(sjmiles): general-purpose utility method should be implemented
+  // elsewhere?
   async: function(method) {
     var handled = false;
     var handle = function() {
