@@ -3,66 +3,113 @@
 <head>
   <meta charset="utf-8">
   <link rel="import" href="polymer/polymer.html">
+  <style>
+    body {
+      font-family: sans-serif;
+      font-size: 1.5em;
+    }
+  </style>
 </head>
-<body style="background-color: whitesmoke;">
-  
-  <!--<frame-tester src="../polymer-1/projects/mail/app.html"></frame-tester>-->
-  <!--<frame-tester src="../polymer-2/projects/mail/app.html"></frame-tester>-->
-  <frame-tester src="../polymer-3/projects/mail/app.html"></frame-tester>
-  <frame-tester src="../polymer-6/projects/mail/app.html"></frame-tester>
-  <frame-tester src="../polymer-4/projects/mail/app.html"></frame-tester>
-  <frame-tester src="../polymer-5/projects/mail/app.html"></frame-tester>
-  
+<body>
+
+  <frame-tester></frame-tester>
+
   <template>
 
     <style>
       :host {
         display: block;
-        overflow: hidden;
-        height: 1em;
-        border: 1px solid orange;
-        padding: 8px;
-        margin: 4px;
-        background-color: white;
       }
       iframe {
+        position: absolute;
         border: 0;
         width: 1024px;
         height: 800px;
         visibility: hidden;
       }  
+      r {
+        color: red;
+        font-weight: bold;
+      }
     </style>
+
+    <div></div>
     
-    <div>{{info}}</div>
     <iframe id="frame" on-load="load"></iframe> 
-    
+
   </template><script>
-  
+
     Polymer({
       name: 'frame-tester',
       runs: 30,
-      info: 'waiting',
+      published: [
+        'tests'
+      ],
       created: function() {
         this.frame = this.$('#frame');
       },
-      go: function() {
-        this.count = 1;
-        this.total = 0;
-        this.frame.src = this.src = this.getAttribute('src');
+      testsChanged: function() {
+        this.go();
       },
-      load: function() {
-        this.measure(function(time) {
-          this.total += time;
-          this.info = (this.total / this.count).toFixed(2) + 'ms, runs: ' + this.count + ' [' + this.src + ']';
-          this.updateBindings();
-          if (this.count++ < this.runs) {
-            this.frame.contentWindow.location.reload(true);
+      shuffle: function(tests) {
+        var shuffled = [];
+        var ordered = tests.slice(0);
+        var count = ordered.length;
+        for (var i=0, j; i<count; i++) {
+          j = Math.floor(Math.random()*count);
+          // TODO(sjmiles): this is an easy but poorly randomized distribution
+          for (; !ordered[j]; j = (j + 1) % count);
+          shuffled.push(j);
+          ordered[j] = null;
+        }
+        return shuffled;
+      },
+      go: function() {
+        this.count = 0;
+        this.total = [];
+        this.times = [];
+        for (var i=0; i<this.tests.length; i++) {
+          this.total[i] = 0;
+          this.times[i] = [];
+        }
+        this.startRun();
+      },
+      startRun: function() {
+        this.shuffled = this.shuffle(this.tests);
+        this.index = -1;
+        console.group('run', this.count);
+        this.nextTest();
+      },
+      nextTest: function() {
+        // last test in this run?
+        if (++this.index === this.tests.length) {
+          console.groupEnd();
+          // report results
+          ++this.count;
+          this.report();
+          // more runs?
+          if (this.count < this.runs) {
+            this.startRun();
           } else {
+            // all done!
             this.fire('done');
           }
+          return;
+        }
+        // test order is randomized
+        this.test = this.shuffled[this.index];
+        this.frame.src = this.tests[this.test];
+        // go async until load event fires
+      },
+      load: function() {
+        // frame is loaded, measure the time, then proceed
+        this.measure(function(time) {
+          this.record(time);
+          this.nextTest();
         });
       },
       measure: function(next) {
+        // pool the document title until it reports a perf value
         var it = setInterval(function() {
           var time = this.frame.contentDocument.title;
           if (time.slice(-2) === 'ms') {
@@ -71,23 +118,67 @@
             next.call(this, time);
           }
         }.bind(this), 10);
+      },
+      record: function(time) {
+        console.log('index [%d], test [%d] time [%d]', 
+          this.index, this.test, time);
+        this.times[this.test].push(time);
+        this.total[this.test] += time;
+      },
+      report: function() {
+        var info = 'Runs: ' + this.count + '<br><br><br>';
+        for (var i=0; i<this.tests.length; i++) {
+          var total = this.total[i], url = this.tests[i];
+          var times = this.times[i], stats = this.stats(times);
+          //
+          var cleaned = [];
+          for (var j=0, v; v=times[j]; j++) {
+            if (!stats.outlier(v)) {
+              cleaned.push(v);
+            }
+          }
+          var time = this.stats(cleaned).mean;
+          //
+          info += '' 
+            + ' <b>' + (time).toFixed(1) + 'ms' + '</b>'
+            + ' [stddev: ' + stats.deviation.toFixed(2) + ']' 
+            + ' [' + url + ']'
+            + '<br>'
+            ;
+          info += '<hr>';
+          info += '<span style="font-size: 0.7em">';
+          for (var j=0, v; v=times[j]; j++) {
+            var o = stats.outlier(v);
+            info += (o ? '<r>' : '') + v + (o ? '</r>' : '') + '|';
+          }
+          info += '</span>';
+          info += '<br><br>'
+        }
+        this.$('div').innerHTML = info;
+      },
+      stats: function(a) {
+        var r = {mean: 0, variance: 0, deviation: 0}, t = a.length;
+        for (var m, s = 0, l = t; l--; s += a[l]);
+        for (m = r.mean = s / t, l = t, s = 0; l--; s += Math.pow(a[l] - m, 2));
+        r.outlier = function(value) {
+          //return (Math.abs(this.mean - value)) > (1 * this.deviation);
+          return value - this.mean > (1 * this.deviation);
+        }
+        return r.deviation = Math.sqrt(r.variance = s / t), r;
       }
     });
-    
+
   </script>
 
   <script>
-    var testers = document.querySelectorAll('frame-tester');
-    var i = 0;
-    function next() {
-      var tester = testers[i++];
-      if (tester) {
-        tester.addEventListener('done', next);
-        tester.go();
-      }
-    }
-    next();
+    document.querySelector('frame-tester').tests = [
+      '../polymer-3/projects/mail/app.html',
+      '../polymer-4/projects/mail/app.html',
+      '../polymer-5/projects/mail/app.html',
+      '../polymer-5-copy/projects/mail/app.html',
+      '../polymer-6/projects/mail/app.html'
+    ];
   </script>
-  
+
 </body>
 </html>

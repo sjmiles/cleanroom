@@ -28,16 +28,45 @@
     // TODO(sjmiles): most of these methods should probably be prefixed with _
     marshalNodeBindings: function(node, annotation) {
       for (var i=0, fn, b; b=annotation.bindings[i]; i++) {
-        if (b.kind === 'event') {
-          this.implementListener(node, b.name, b.value);
-        } else {
-          this._bindings.push({
-            node: node,
-            property: b.value,
-            fn: this.implementBinding(node, b.kind, b.name, b.value, b.mode)
-          });
+        switch (b.kind) {
+          case 'event':
+            this.implementListener(node, b.name, b.value);
+            break;
+          case 'style':
+            this.implementStyleBindings(node, b);
+            break;
+          default:
+            this._bindings.push({
+              node: node,
+              property: b.value,
+              fn: this.implementBinding(node, b.kind, b.name, b.value, b.mode)
+            });
         }
       }
+    },
+    implementStyleBindings: function(node, binding) {
+      // TODO(sjmiles): need to do all of this in 'annotations.html'
+      var b$ = binding.value.split(';');
+      b$.forEach(function(b) {
+        var nv = b.split(':');
+        var name = nv[0].trim();
+        var property = nv[1].trim();
+        var style = node.style;
+        var fn = function(value) {
+          style[name] = value;
+        };
+        this._bindings.push({
+          node: node,
+          property: property,
+          fn: fn
+        });
+        if (binding.mode === 'auto') {
+          // create an observable property
+          this.publishProperty(property);
+          // update the binding when changes are observed
+          this.watch(property, fn);
+        };
+      }, this);
     },
     implementListener: function(node, name, method) {
       // TODO(sjmiles): perhaps implementListener should
@@ -61,17 +90,17 @@
         case 'text':
           // TODO(sjmiles): baby-step toward path support
           //  - only text bindings
-          //  - support exactly one dot (foo.bar)
           //  - generated fn binds to this, derefs path from model 
           //    (ignores argument)
-          /*
           if (property.indexOf('.') >= 0) {
             var path = property.split('.');
+            /*
             var object = path[0];
             var property = path[1];
             // TODO(sjmiles): tortured attempt to avoid nerfing performance
             //  - binder does nothing until target object becomes available
             //    then memoizes it for all time
+            //  - support exactly one dot (foo.bar)
             var work = function() {
               var obj = this[object];
               if (obj) {
@@ -87,9 +116,38 @@
               work();
             };
             //console.log('[implementBinding]: path detected: [%s]', property);
+            */
+            // do it the hard way, just to see 
+            var self = this;
+            var c = path.length;
+            var fn = function() {
+              var o = self._model;
+              for (var i=0; i<c; i++) {
+                o = o[path[i]];
+                if (o === undefined || o === null) {
+                  return;
+                }
+              }
+              node.data = o;
+            };
+            /*
+            // play with slight opt 
+            //  - support exactly one dot (foo.bar)
+            var self = this;
+            var c = path.length;
+            var fn = function() {
+              var o = self._model;
+              o = o[path[0]];
+              o = o && o[path[1]];
+              (o !== undefined) && (node.data = o);
+            }
+            */
+            // TODO(sjmiles): my benchmarking setup is not good enough
+            // to differentiate these algorithms perf wise
+            // they seem to all cost a bit more (10%?) than having no 
+            // path support. 
             break;
           }
-          */
           var fn = function(value) {
             node.data = value;
           };
@@ -98,7 +156,7 @@
           var fn = function(value) {
             if (typeof value === 'boolean') {
               node[value ? 'setAttribute' : 'removeAttribute'](name, '');
-            } else {
+            } else if (value || value === ''){
               node.setAttribute(name, value);
             }
           };

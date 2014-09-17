@@ -1,0 +1,61 @@
+<link rel="import" href="bindable-input.html">
+
+<template>
+
+  <style>
+    :host {
+      padding: 8px;
+    }
+  </style>
+
+  <input is="bindable-input" type="checkbox" $checked:="item.completed" on-change="checked">
+  <td-input flex style:="color: inputColor" placeholder="What to do?" value:="item.value"></td-input>
+  &nbsp;<button on-click="remove">x</button>
+
+</template><script>
+  
+  Polymer({
+    name: 'td-todo',
+    hostAttributes: 'horizontal center layout',
+    published: [
+      'item'
+    ],
+    watched: {
+      'item': 'updateBindings'
+    },
+    computed: {
+      // TODO(sjmiles): support PathDatum in computed
+      'inputColor': 'computeInputColor(item.completed)'
+    },
+    created: function() {
+      // TODO(sjmiles): how the binding engine could interpret
+      // <td-input value:='item.value'>
+      /*
+      new PathDatum(this._datum('item'), 'value').merge(
+        this.$('td-input')._datum('value'));
+      */
+      // TODO(sjmiles): how the binding engine could interpret
+      // <input $checked:="item_completed">
+      /*
+      var completed = new PathDatum(this._datum('item'), 'completed');
+      completed.merge(this.$('input')._datum('$checked'));
+      // TODO(sjmiles): setup computed property manually
+      completed.watch(function(completed) {
+        this.inputColor = this.computeInputColor(completed);
+      }.bind(this));
+      */
+      /*
+      this.watch('item.completed', function(completed) {
+        this.inputColor = this.computeInputColor(completed);
+      }.bind(this));
+      */
+    },
+    remove: function() {
+      this.fire('item-remove', this.item);
+    },
+    computeInputColor: function(completed) {
+      return completed ? 'silver' : '';
+    }
+  });
+
+</script>

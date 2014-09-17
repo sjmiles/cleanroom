@@ -1,0 +1,139 @@
+<link rel="import" href="bindable-input.html">
+
+<template>
+
+  <style>
+    :host {
+      padding: 8px;
+    }
+  </style>
+
+  <input is="bindable-input" type="checkbox" $checked:="completed" on-change="checked">
+  <td-input flex style:="color: inputColor" placeholder="What to do?" value:="value"></td-input>
+  &nbsp;<button on-click="remove">x</button>
+
+</template><script>
+  
+  var PathDatum = function(model, path) {
+    this.model = model;
+    this.model.watch(this.modelChange.bind(this));
+    this.path = path;
+    this.referers = [];
+  };
+  PathDatum.prototype = Object.create(Datum.prototype);
+  extend(PathDatum.prototype, {
+    setValue: function(value) {
+      var old = this.value;
+      if (old !== value) {
+        this.decorateValue(value);
+        this.value = value;
+        this.notify(old);
+      }
+    },
+    modelChange: function() {
+      Datum.prototype.notify.call(this);
+    },
+    notify: function() {
+      Datum.prototype.notify.call(this);
+      this.model.notify();
+    },
+    set value(value) {
+      var o = this.model.value;
+      if (o) {
+        o[this.path] = value;
+      }
+    },
+    get value() {
+      var o = this.model.value;
+      return o && o[this.path];
+    }
+  });
+
+  var _defineProperty = function(name, datum) {
+    this._refer(name, datum);
+    Object.getPrototypeOf(this)._defineAccessors(name);
+  };
+  
+  Polymer({
+    name: 'td-todo',
+    hostAttributes: 'horizontal center layout',
+    published: [
+      'item', 
+      'completed'
+    ],
+    watched: {
+      'item': 'updateBindings'//,
+      //'completed value': 'viewModelChanged'
+    },
+    computed: {
+      'inputColor': 'computeInputColor(completed)'
+    },
+    construct: function() {
+      _defineProperty.call(this, 'value', 
+        new PathDatum(this._datum('item'), 'value'));
+      _defineProperty.call(this, 'completed', 
+        new PathDatum(this._datum('item'), 'completed'));
+      //this.$('td-input').bindProperty('value', 'value', this);
+    },
+    // TODO(sjmiles): can we avoid hand-mapping POJO properties to view-model?
+    // Right now all bindable properties are instances of Datum. Imagine that 
+    // there are bindable properties of the form Datum.[path].
+    // Setting such a property manually would require using a setter,
+    // [Datum].setValue(path, value) to be observed. Automated indirections 
+    // (DOM bindings, computed) could do this transparently.
+    // So <span>{{item.foo}}</span> would just work. 
+    // 'item.spuz': 'calculateSpuz' would just work.
+    // Property bindings could also work, for example:
+    // <td-input value:="item.value">
+    // Could bind in such a way that (already observable) sets to `value`
+    // in td-input would trigger watches on item.value. Also changes in `item` 
+    // could notify `item.value` (dirty-checking? would need to cache an `old` 
+    // value).
+    // `item.value` could be the single-source of truth for such a binding,
+    // although n-way bindings, like item.flarn => foo => record.spuz would
+    // require actual propagation (no longer single-source of truth).
+    // Suggestion: write code here to simulate the concept.
+    itemChanged: function() {
+      //this.value = this.item.value;
+      //this.completed = Boolean(this.item.completed);
+    },
+    // TODO(sjmiles): extreme trickiness
+    // This method is triggered at create time by `itemChanged`, but because 
+    // it's a simple `watch`, it's called synchronously, and at create time we 
+    // don't yet have a parent. Therefore, no element hears `item-change` and  
+    // we avoid the update-loop that is caused by `viewModelChanged` (which
+    // is a compound watch, and therefore triggered _asynchronously_.)
+    completedChanged: function() {
+      this.inputColor = this.completed ? 'silver' : '';
+      //this.item.completed = this.completed;
+      this.fire('item-change');
+    },
+    XviewModelChanged: function() {
+      // TODO(sjmiles): hand-mapping pitfall 
+      // Bound values use a dirty-check to break feedback-loops; because we are 
+      // propagating manually we have to dirty-check here. 
+      if (this.completed !== this.item.completed || this.value !== this.value) {
+        this.inputColor = this.completed ? 'silver' : '';
+        this.item.completed = this.completed;
+        this.fire('item-change');
+      }
+    },
+    remove: function() {
+      this.fire('item-remove', this.item);
+    },
+    computeInputColor: function(completed) {
+      return completed ? 'silver' : '';
+    },
+    // TODO(sjmiles): there is no differentiation between changes to `item` and 
+    // changes to `item.completed`
+    // `item-change` event forces change handling on `item`, if we call it from
+    // `completedChanged`, for example, we have a problem because setting `item`
+    // will cause `completedChanged` which will fire `item-change`, but `item` 
+    // itself has not changed and this causes feedback-loop. 
+    //   
+    checked: function() {
+      //this.fire('item-change');
+    }
+  });
+
+</script>

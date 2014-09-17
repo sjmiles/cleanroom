@@ -164,8 +164,9 @@ DataClient = {
   init: function() {
     this._data = {};
     this.publishProperties(this.published);
-    this.watchProperties(this.watched);
+    // TODO(sjmiles): order matters, which is a problem with this sugaring
     this.defineComputedProperties(this.computed);
+    this.watchProperties(this.watched);
   },
   publishProperties: function(properties) {
     properties.forEach(this.publishProperty, this)

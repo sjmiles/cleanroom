@@ -11,32 +11,142 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <html lang="en" data-framework="polymer">
 <head>
 
-	<meta charset="utf-8">
+  <meta charset="utf-8">
 
-	<title>Polymer • TodoMVC</title>
+  <title>Polymer • TodoMVC</title>
 
-	<link rel="import" href="../../polymer/polymer.html">
   <link rel="import" href="../../elements/x-repeater.html">
-	<link rel="import" href="elements/td-model.html">
-	<link rel="import" href="elements/td-todos.html">
-	
-  <link rel="stylesheet" href="app/app.css">
+  <link rel="import" href="td-input.html">
+  <link rel="import" href="td-todo.html">
+  <link rel="import" href="td-radiogroup.html">
+  <link rel="import" href="TodoModel.html">
   
+  <style>
+    td-app {
+      margin: auto;
+      width: 700px;
+      background-color: whitesmoke;
+      font-family: sans-serif;
+    }
+  </style>
 </head>
 <body>
 
-	<header>
-		<h1>todos</h1>
-	</header>
-	
-	<td-model id="model" storageId="storage"></td-model>
-	<td-todos modelId="model"></td-todos>
-	
-	<footer id="info">
-		<p>Double-click to edit a todo</p>
-		<p>Created by <a href="http://www.polymer-project.org">The Polymer Authors</a></p>
-		<p>Part of <a href="http://todomvc.com">TodoMVC</a></p>
-	</footer>
-	
+<td-app></td-app>
+
+<template>
+
+  <style>
+    :host {
+      display: block;
+    }
+    status-bar {
+      padding: 6px 12px;
+      background-color: #eaeaea;
+    }
+  </style>
+
+  <td-input placeholder="What to do?" on-keypress="keypress" value*="{{newValue}}"></td-input>
+
+  <x-repeater kind="td-todo" items*="{{filtered}}"></x-repeater>
+
+  <status-bar horizontal center layout>
+
+    <span flex>{{leftText}}</span>
+
+    <td-radiogroup flex selected*="{{filter}}" style="text-align: center">
+      <label><input type="radio" name="filter" id="all">All</label>
+      <label><input type="radio" name="filter" id="active">Active</label>
+      <label><input type="radio" name="filter" id="completed">Completed</label>
+    </td-radiogroup>
+
+    <span flex style="text-align: right">    
+      <button style*="{{visibility: buttonVisibility}}">{{completedText}}</button>
+    </span>
+
+  </status-bar>
+
+</template><script>
+
+  Polymer.log = {
+    //events: true,
+    //watches: true
+  };
+
+  // TODO(sjmiles): Behaviors that currently require manual notify:
+  // - event triggers (`item-changed`) 
+
+  Polymer({
+    name: 'td-app',
+    _attributes: 'vertical layout',
+    // TODO(sjmiles): might need new name. `Publish` no longer means 
+    // 'make public', now it means 'make bindable/observable'
+    // e.g. `completed` is not intended to be public API
+    published: [
+      'items',
+      'filter',
+      'completed'
+    ],
+    listeners: {
+      'item-change': 'itemChange',
+      'item-remove': 'itemRemove'
+    },
+    computed: {
+      'leftText': 'computeLeftText(items, completed)',
+      'completedText': 'computeCompletedText(completed)'
+    },
+    construct: function() {
+      this.model = new TodoModel();
+    },
+    created: function() {
+      // TODO(sjmiles): ad-hoc
+      // Perhaps if we supported binding to paths we could
+      // avoid this bit.
+      // e.g. items*="{{filtered}}" becomes items*="{{model.filtered}}"
+      // also 'leftText': 'computeLeftText(items, completed)' becomes
+      // 'leftText': 'computeLeftText(model.items, model.completed)'
+      // In this case since 'model' is a DataClient, observation is free.
+      // Can we do this simply? What about non-DataClient properties?
+      // This feature would also simplify mail/x-item, which binds a series
+      // of fields from a POJO to DOM. x-item already understands that  
+      // the POJO properties are not watched.  
+      this.bindModel(this.model, ['items', 'filter', 'filtered', 'completed']);
+      //
+      this.items = [
+        {value: 'Party'},
+        {value: 'Dethrone native apps'}, 
+        {value: 'Extend the web', completed: true}
+      ];
+      this.filter = 'all';
+    },
+    keypress: function(e) {
+      if (e.keyCode === e.keys.ENTER_KEY) {
+        this.itemAdd();
+      }
+    },
+    itemAdd: function() {
+      this.model.add({value: this.newValue});
+      this.newValue = '';
+    },
+    itemRemove: function(e, item) {
+      this.model.remove(item);
+    },
+    itemChange: function() {
+      this.model.itemChange();
+    },
+    completedChanged: function() {
+      this.buttonVisibility = this.completed ? '' : 'hidden';
+    },
+    computeCompletedText: function(completed) {
+      return 'Clear completed (' + completed + ')';
+    },
+    computeLeftText: function(items, completed) {
+      var left = items.length - completed;
+      return left + (left === 1 ? ' item' : ' items') + ' left';
+    }
+  });
+
+</script>
+
 </body>
 </html>

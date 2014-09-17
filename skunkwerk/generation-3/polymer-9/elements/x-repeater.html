@@ -1,0 +1,55 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<script>
+
+  Polymer({
+    name: 'x-repeater',
+    published: [
+      'items',
+      'kind'
+    ],
+    created: function() {
+      this.style.display = 'block';
+      this.attributeChanged('kind');
+    },
+    attributeChanged: function(name) {
+      if (name === 'kind') {
+        this.kind = this.getAttribute('kind');
+      }
+    },
+    itemsChanged: function() {
+      this.root.textContent = '';
+      if (this.items && this.kind) {
+        for (var i=0, row, item; item=this.items[i]; i++) {
+          row = document.createElement(this.kind);
+          // provide change notification on items when item changes
+          // TODO(sjmiles): we use do to do this _after_ setting
+          // row to avoid feedback loop. Now I'm doing it beforehand
+          // specifically to test new system which should not have
+          // feedback problem
+          row.propertiesWatch('item', function() {
+            // TODO(sjmiles): PathDatums automatically propagate
+            // propertiesChange, but this only works if 'item' and 'items[i]'
+            // are bound
+            this.notifyPropertiesChange('items');
+          }.bind(this));
+          // TODO(sjmiles): simple assignment, not a binding
+          row.item = item;
+          // TODO(sjmiles): brain bender: I'm unsure
+          // how to frame this bind-aware analog to the
+          // simple assignment (or make it work)
+          // TODO(sjmiles): imperative PathDatum binding, how to sugar?
+          //var datum = new PathDatum(this._datum('items'), i);
+          //datum.merge(row._datum('item'));
+          // TODO(sjmiles): haven't implemented PathDatum merging
+          //datum.merge(row.$('td-input')._datum('value'));
+          //row.updateBindings();
+          //row.notifyChange('item');
+          // render row
+          this.root.appendChild(row);
+        }
+      }
+    }
+  });
+
+</script>

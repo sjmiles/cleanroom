@@ -1,0 +1,14 @@
+<script>
+  Polymer({
+    name: 'x-radiogroup',
+    published: [
+      'selected'
+    ],
+    created: function() {
+      this.eventBind('change', this, 'id', this, 'selected');
+    },
+    selectedChanged: function() {
+      this.querySelector('#' + this.selected).checked = true;
+    }
+  });
+</script>

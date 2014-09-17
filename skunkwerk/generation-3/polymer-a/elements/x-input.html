@@ -1,0 +1,33 @@
+<script>
+(function(){
+
+  var prototype = {
+    name: 'x-input',
+    published: [
+      '$checked',
+      '$value',
+      '$editvalue'
+    ],
+    created: function() {
+      this.eventBind('change', this, 'checked', this, '$checked');
+      this.eventBind('change', this, 'value', this, '$value');
+      this.eventBind('input', this, 'value', this, '$editvalue');
+    },
+    $checkedChanged: function(checked) {
+      this.checked = checked;
+    },
+    $valueChanged: function(value) {
+      this.value = value;
+    }
+  };
+  
+  var branch = Object.create(HTMLInputElement.prototype);
+  extend(branch, Base);
+  prototype.__proto__ = branch;
+  prototype.registerCallback();
+  
+  document.registerElement(prototype.name, 
+    {prototype: prototype, extends: 'input'});
+
+})();
+</script>

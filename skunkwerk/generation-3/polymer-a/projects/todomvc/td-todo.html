@@ -1,0 +1,38 @@
+<link rel="import" href="../../elements/x-input.html">
+
+<template>
+
+  <style>
+    :host {
+      padding: 8px;
+    }
+    input[flex] {
+      padding: 8px;
+      border: none;
+    }
+  </style>
+
+  <input is="x-input" type="checkbox" $checked:="item.completed" on-change="checked">
+  <input is="x-input" flex style:="color: inputColor" placeholder="What to do?" $value:="item.value">
+  &nbsp;<button on-click="remove">x</button>
+
+</template><script>
+  
+  Polymer({
+    name: 'td-todo',
+    hostAttributes: 'horizontal center layout',
+    published: [
+      'item'
+    ],
+    computed: {
+      inputColor: 'computeInputColor(item.completed)'
+    },
+    computeInputColor: function(completed) {
+      return completed ? 'silver' : '';
+    },
+    remove: function() {
+      this.fire('item-remove', this.item);
+    }
+  });
+
+</script>

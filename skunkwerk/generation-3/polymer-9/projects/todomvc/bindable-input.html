@@ -1,0 +1,26 @@
+<script>
+(function(){
+
+  var prototype = {
+    name: 'bindable-input',
+    published: [
+      '$checked'
+    ],
+    created: function() {
+      this.eventBind('change', this, 'checked', this, '$checked');
+    },
+    $checkedChanged: function(checked) {
+      this.checked = checked;
+    }
+  };
+  
+  var branch = Object.create(HTMLInputElement.prototype);
+  extend(branch, Base);
+  prototype.__proto__ = branch;
+  prototype.registerCallback();
+  
+  document.registerElement(prototype.name, 
+    {prototype: prototype, extends: 'input'});
+
+})();
+</script>

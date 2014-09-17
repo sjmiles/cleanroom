@@ -1,0 +1,31 @@
+<template>
+
+  <style>
+    :host {
+      display: inline-block;
+    }
+    input {
+      padding: 8px;
+      border: none;
+      color: inherit;
+    }
+  </style>
+
+  <input flex placeholder="[[placeholder]]" value*="{{value}}">
+
+</template><script>
+
+  Polymer({
+    name: 'td-input',
+    _attributes: 'vertical layout',
+    published: [
+      'value'
+    ],
+    created: function() {
+      this.input = this.$('input');
+      this.placeholder = this.getAttribute('placeholder');
+      this.eventBind('input', this.input, 'value', this, 'value');
+    }
+  });
+
+</script>

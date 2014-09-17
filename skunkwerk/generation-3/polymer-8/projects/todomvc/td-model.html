@@ -1,0 +1,54 @@
+<script>
+  
+  Polymer({
+    name: 'td-model',
+    //
+    // public api
+    //
+    published: [
+      'items',
+      'filter',
+    ],
+    computed: {
+      completed: 'computeCompleted(items)',
+      filtered: 'computeFiltered(items, filter)'
+    },
+    add: function(item) {
+      this.items.push(item);
+    },
+    remove: function(item) {
+      var i = this.items.indexOf(item);
+      this.items.splice(i, 1);
+    },
+    itemChange: function() {
+      // provoke a change observation on property `items`
+      this.notifyChange('items');
+    },
+    //
+    // stateless computations
+    //
+    computeCompleted: function(items) {
+      var completed = 0;
+      items.forEach(function(i) {
+        i.completed && completed++;
+      });
+      return completed;
+    },
+    // TODO(sjmiles): allowing `this` might be problematic, it's easy
+    // to mess up statelessness
+    computeFiltered: function(items, filter) {
+      var fn = this.filters[filter];
+      return fn ? items.filter(fn) : items.slice(0);
+    },
+    // filter functions
+    filters: {
+      active: function(item) {
+        return !item.completed;
+      },
+      completed: function(item) {
+        return item.completed;
+      }
+    }
+  });
+
+</script>

@@ -94,6 +94,9 @@ TODO(sjmiles): this module should produce either syntactic metadata
             if (kind === 'property') {
               n = n.slice(0, -1);
             }
+            if (n === 'style') {
+              kind = 'style';
+            }
             annotation.bindings.push({
               kind: kind,
               mode: escape === '{{' ? 'auto' : '',

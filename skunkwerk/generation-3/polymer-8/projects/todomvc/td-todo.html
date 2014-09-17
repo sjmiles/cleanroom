@@ -1,0 +1,127 @@
+<link rel="import" href="bindable-input.html">
+
+<template>
+
+  <style>
+    :host {
+      padding: 8px;
+    }
+  </style>
+
+  <input is="bindable-input" type="checkbox" $checked:="item_completed" on-change="checked">
+  <td-input flex style:="color: inputColor" placeholder="What to do?" value:x="value"></td-input>
+  &nbsp;<button on-click="remove">x</button>
+
+</template><script>
+  
+  // TODO(sjmiles): can we avoid hand-mapping POJO properties to view-model?
+  // Right now all bindable properties are instances of Datum. Imagine that 
+  // there are bindable properties of the form Datum.[path].
+  // Setting such a property manually would require using a setter,
+  // [Datum].setValue(path, value) to be observed. Automated indirections 
+  // (DOM bindings, computed) could do this transparently.
+  // So <span>{{item.foo}}</span> would just work. 
+  // 'item.spuz': 'calculateSpuz' would just work.
+  // Property bindings could also work, for example:
+  // <td-input value:="item.value">
+  // Could bind in such a way that (already observable) setValue to `value`
+  // in td-input would trigger watches on `item.value`. Also changes in `item` 
+  // could notify `item.value` (dirty-checking? would need to cache a value).
+  // Could `item.value` be the single-source of truth for such a binding?
+  // N-way bindings, like item.flarn => foo => record.spuz would
+  // require actual propagation (so, no single-source of truth).
+  // Suggestion: write code here to simulate the concept.
+  // TODO(sjmiles): here is that code.
+  var PathDatum = function(model, path) {
+    this.referers = [];
+    this.model = model;
+    // if the model changes, we change (no dirty check)
+    this.model.watch(Datum.prototype.notify.bind(this));
+    this.path = path;
+  };
+  PathDatum.prototype = Object.create(Datum.prototype);
+  extend(PathDatum.prototype, {
+    notify: function() {
+      Datum.prototype.notify.call(this);
+      this.model.notify();
+    },
+    set value(value) {
+      var o = this.model.value;
+      if (o) {
+        o[this.path] = value;
+      }
+    },
+    get value() {
+      var o = this.model.value;
+      return o && o[this.path];
+    }
+  });
+
+  var _defineProperty = function(name, datum) {
+    this._refer(name, datum);
+    Object.getPrototypeOf(this)._defineAccessors(name);
+  };
+  
+  Polymer({
+    name: 'td-todo',
+    hostAttributes: 'horizontal center layout',
+    published: [
+      'item', 
+      'item_completed'
+    ],
+    watched: {
+      'item': 'updateBindings'
+    },
+    computed: {
+      'inputColor': 'computeInputColor(item_completed)'
+    },
+    construct: function() {
+      // TODO(sjmiles): I'm creating an intermediate property so I can
+      // bind in non-PathDatum aware structures like `computed` and
+      // `generic property bind` in template (`<input $checked:='item_completed'` 
+      // above). Otherwise, the idea is that the PathDatum would be 
+      // known only as `item.completed` (as below for `item.value`)  
+      _defineProperty.call(this, 'item_completed', 
+        new PathDatum(this._datum('item'), 'completed'));
+    },
+    created: function() {
+      // TODO(sjmiles): how the binding engine could interpret
+      // <td-input value:='item.value'>
+      new PathDatum(this._datum('item'), 'value').merge(
+        this.$('td-input')._datum('value'));
+    },
+    remove: function() {
+      this.fire('item-remove', this.item);
+    },
+    computeInputColor: function(completed) {
+      return completed ? 'silver' : '';
+    },
+    // TODO(sjmiles): there is no differentiation between changes to `item` and 
+    // changes to `item.completed`
+    // `item-change` event forces change handling on `item`, if we call it from
+    // `completedChanged`, for example, we have a problem because setting `item`
+    // will cause `completedChanged` which will fire `item-change`, but `item` 
+    // itself has not changed and this causes feedback-loop (the feedback-loop
+    // isn't infinite because the initial setting of `item` happens before
+    // this element is in the tree, so the first `item-change` event is 
+    // ignored). 
+    // How can we fix this? We explicitly only want user generated changes
+    // to fire item-change, so on one hand it makes sense to use ui event
+    // listeners. On the other hand, allowing this weirdness in PathDatum 
+    // confuses the mental model.
+    // Removing the need for the `item-change` event gambit is another
+    // solution. If we can build an `ArrayDatum` that handles the issue of 
+    // item-change internally, perhaps we can manage these observations 
+    // under-the-hood. `ArrayDatum` would allow binding to array members, just
+    // like PathDatum allows binding to properties. The other side of the 
+    // binding is a `Datum` that the `ArrayDatum` can watch for changes and
+    // notify itself (same gambit as `PathDatum`).
+    completedChanged: function() {
+      //this.fire('item-change');
+    },
+    checked: function() {
+      this.fire('item-change');
+    }
+  });
+
+</script>

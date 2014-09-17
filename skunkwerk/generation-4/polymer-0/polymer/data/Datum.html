@@ -1,0 +1,98 @@
+<script>
+
+var Datum = function(value) {
+  this.value = value;
+  // we require back references so we can merge datums
+  // back references will require dispose pattern for GC,
+  // but then we already have this problem wrt watchers
+  // a 'referer' must be a DataClient
+  this.referers = [];
+}
+
+Datum.prototype = {
+  addReferer: function(client, name) {
+    // TODO(sjmiles): `client` has to be a DataClient right now, could be 
+    // generalized.
+    // TODO(sjmiles): storing this data seems wrong, the Datum doesn't need
+    // to know these details except for merging. Perhaps we should take
+    // a function argument, and let the caller supply a closure with the 
+    // necessary bookkeeping. 
+    this.referers.push({client: client, name: name});
+  },
+  //
+  watch: function(notifier) {
+    this._watch('watchers', notifier);
+  },
+  propertiesWatch: function(notifier) {
+    this._watch('propertyWatchers', notifier);
+  },
+  _watch: function(collection, notifier) {
+    if (!this[collection]) {
+      this[collection] = [];
+    }
+    this[collection].push(notifier);
+  },
+  //
+  get value() {
+    return this._value;
+  },
+  set value(value) {
+    var old = this._value;
+    if (old !== value) {
+      this.decorateValue(value);
+      this._value = value;
+      this.notify(old);
+    }
+  },
+  decorateValue: function(value) {
+    // TODO(sjmiles): experimental
+    if (value instanceof Array) {
+      // TODO(sjmiles): how costly is this?
+      extend(value, ArrayTrap);
+      // TODO(sjmiles): attaching client this way is problematic
+      value.client = this;
+    }
+  },
+  //
+  notify: function(old) {
+    this._notify(this.watchers, this.value, old);
+  },
+  notifyProperties: function(property) {
+    this._notify(this.propertyWatchers, this.value, property);
+  },
+  _notify: function(watchers, value, other) {
+    if (watchers) {
+      watchers.forEach(function(w) {
+        w(value, other);
+      });
+    }
+  },
+  //
+  merge: function(other) {
+    if (other.mergePriority) {
+      return other.merge(this);
+    }
+    // transfer all watchers of `other` to `this`
+    if (other.watchers) {
+      this.watchers = (this.watchers || []).concat(other.watchers);
+      other.watchers = null;
+    }
+    // transfer all properties watchers of `other` to `this`
+    if (other.propertyWatchers) {
+      this.propertyWatchers = 
+        (this.propertyWatchers || []).concat(other.propertyWatchers);
+      other.propertyWatchers = null;
+    }
+    // redirect all referers of `other` to `this`
+    var referers = other.referers;
+    if (referers.length) {
+      referers.forEach(function(r) {
+        r.client._refer(r.name, this);
+      }, this);
+      other.referers = null;
+    }
+    // `other` should be free to GC at this point    
+  }
+};
+
+</script>

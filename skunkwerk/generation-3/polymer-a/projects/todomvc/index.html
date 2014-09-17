@@ -1,0 +1,140 @@
+<!doctype html>
+<html>
+<head>
+
+  <script src="../../lib/perf.js"></script>
+
+  <meta charset="utf-8">
+
+  <title>Polymer • TodoMVC</title>
+
+  <link rel="import" href="../../elements/x-repeater.html">
+  <link rel="import" href="../../elements/x-radiogroup.html">
+  <link rel="import" href="../../elements/x-input.html">
+  <link rel="import" href="td-todo.html">
+  <link rel="import" href="td-model.html">
+
+  <style>
+    td-app {
+      margin: auto;
+      width: 700px;
+      background-color: whitesmoke;
+      font-family: sans-serif;
+    }
+  </style>
+
+</head>
+<body>
+
+  <script>console.perf();</script>
+  
+  <td-app></td-app>
+  
+  <template>
+  
+    <style>
+      :host {
+        display: block;
+      }
+      status-bar {
+        height: 2em;
+        padding: 6px 12px;
+        background-color: #eaeaea;
+      }
+      status-bar > [center] {
+        text-align: center;
+      }
+      status-bar > [right] {
+        text-align: right;
+      }
+      input {
+        padding: 8px;
+        border: none;
+      }
+    </style>
+  
+    <td-model items:="items" filter:="filter" filtered:="filtered" completed:="completed"></td-model> 
+    
+    <input is="x-input" placeholder="What to do?" $editvalue:="newValue"></input>
+  
+    <x-repeater kind="td-todo" items:="filtered"></x-repeater>
+  
+    <status-bar horizontal center layout>
+      <span flex>{{leftText}}</span>
+      <x-radiogroup flex center selected:="filter">
+        <label><input type="radio" name="filter" id="all">All</label>
+        <label><input type="radio" name="filter" id="active">Active</label>
+        <label><input type="radio" name="filter" id="completed">Completed</label>
+      </x-radiogroup>
+      <span flex right>    
+        <button hidden="{{buttonHidden}}">Clear completed (<span>{{completed}}</span>)</button>
+      </span>
+    </status-bar>
+  
+  </template><script>
+  
+    Polymer.log = {
+      //events: true,
+      //watches: true
+    };
+  
+    Polymer({
+      // name of this element
+      name: 'td-app',
+      // attributes to set on host
+      hostAttributes: 'vertical layout',
+      // event listeners to set on host
+      listeners: {
+        'item-change': 'filteredItemChange',
+        'item-remove': 'itemRemove'
+      },
+      // map handlers to key-codes for keypress on host
+      // TODO(sjmiles): roll into `listeners`?
+      keyPresses: {
+        ENTER_KEY: 'itemAdd'
+      },
+      //
+      // instance setup after template stamping
+      //
+      created: function() {
+        this.model = this.$('td-model');
+        this.items = [
+          {value: 'Extend the web', completed: true},
+          {value: 'Dethrone native apps'}, 
+          {value: 'Party'}
+        ];
+        this.filter = 'all';
+      },
+      //
+      // event handlers
+      //
+      itemAdd: function() {
+        this.model.add({value: this.newValue});
+        this.newValue = '';
+      },
+      itemRemove: function(e, item) {
+        this.model.remove(item);
+      },
+      //
+      // computed properties
+      //
+      computed: {
+        leftText: 'computeLeftText(items, completed)',
+        buttonHidden: 'computeButtonHidden(completed)'
+      },
+      // stateless computations
+      computeButtonHidden: function(completed) {
+        return !completed;
+      },
+      computeLeftText: function(items, completed) {
+        var left = items.length - completed;
+        return left + (left === 1 ? ' item' : ' items') + ' left';
+      }
+    });
+  
+  </script>
+
+  <script>console.perfEnd();</script>
+
+</body>
+</html>

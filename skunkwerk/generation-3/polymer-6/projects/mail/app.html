@@ -41,6 +41,9 @@
         width: 200px; 
         margin-right: 8px;
       }
+      #selector [selected] {
+        background-color: #FAF0E8;
+      }
     </style>
 
     <!-- appbar -->
@@ -90,13 +93,14 @@
         this.mail = data.items;
         this.labels = data.items.slice(0, 10);
         this.contacts = data.items.slice(20, 35);
+        this.selected = 0;
         //
         this.$('#selector').watch('selected', function(value, old) {
           if (old) {
-            old.style.border = '';
+            old.removeAttribute('selected');
           } 
-          if (value) {
-            value.style.border = '1px solid orange'; 
+          if (value && value.localName === 'x-item') {
+            value.setAttribute('selected', '');
           }
           this.selected = 1;
         }.bind(this));

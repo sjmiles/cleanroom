@@ -1,0 +1,29 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<template>
+
+  <style>
+    :host {
+      padding: 0 12px;
+      font-size: 0.8em;
+    }
+  </style>
+  <content></content>
+  <x-icon icon="drop" size="16"></x-icon>
+
+</template>
+<script>
+
+  Polymer({
+    name: 'x-drop-button',
+    _attributes: 'center horizontal inline layout',
+    attributeChanged: function(name) {
+      switch (name) {
+        case 'active':
+          this.classList.toggle('selected', this.hasAttribute('active'));
+          break;
+      }
+    }
+  });
+
+</script>

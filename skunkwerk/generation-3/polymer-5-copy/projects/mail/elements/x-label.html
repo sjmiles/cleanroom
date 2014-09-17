@@ -1,0 +1,33 @@
+<template>
+
+  <style>
+    :host {
+      display: block;
+      font-size: 0.8em;
+      white-space: nowrap;
+      margin: 6px 0;
+      cursor: pointer;
+    }
+  </style>
+  
+  <span>[[from]]</span> <span>[[count]]</span>
+</template>
+
+<script>
+(function() {
+
+  Polymer({
+    name: 'x-label',
+    published: [
+      'item'
+    ],
+    itemChanged: function(item) {
+      this.from = item.from;
+      this.count = item.count;
+      this.updateBindings();
+      this.style.fontWeight = item.count ? 'bold' : '';
+    }
+  });
+
+})();
+</script>

@@ -1,0 +1,47 @@
+<script>
+
+PathDatum = subclass(Datum, {
+  constructor: function(model, path) {
+    this.referers = [];
+    this.model = model;
+    this.path = path;
+    // if the model changes, we change (no dirty check)
+    this.model.watch(this.selfNotify.bind(this));
+    // TODO(sjmiles): experimental: always propagate propertiesChange notification
+    this.propertiesWatch(function() {
+      // TODO(sjmiles): closure here for debugging/tracing
+      this.notify();
+    }.bind(this));
+  },  
+  mergePriority: true,
+  notify: function(path) {
+    this.model.notifyProperties(path);
+  },
+  selfNotify: function() {
+    Datum.prototype.notify.call(this);
+  },
+  set value(value) {
+    var o = this.model.value;
+    if (o) {
+      var old = o[this.path];
+      if (old !== value) {
+        //this.decorateValue(value);
+        o[this.path] = value;
+        this.notify(this.path);
+      }
+    }
+  },
+  get value() {
+    var o = this.model.value;
+    return o && o[this.path];
+  }
+});
+
+/*
+var _defineProperty = function(name, datum) {
+  this._refer(name, datum);
+  Object.getPrototypeOf(this)._defineAccessors(name);
+};
+*/
+
+</script>

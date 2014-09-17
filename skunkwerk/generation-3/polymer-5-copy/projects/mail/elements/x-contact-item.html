@@ -1,0 +1,43 @@
+<template>
+
+  <style>
+    :host {
+      display: block;
+      font-size: 0.8em;
+      white-space: nowrap;
+      margin: 6px 0;
+      cursor: pointer;
+    }
+    img {
+      width: 24px;
+      height: 24px;
+      vertical-align: middle;
+    }
+  </style>
+
+  <div horizontal center layout>  
+    <img avatar src="[[avatar]]">&nbsp;<span>[[text]]</span>
+  </div>
+  
+</template>
+
+<script>
+(function() {
+
+  var index = 0;
+  
+  Polymer({
+    name: 'x-contact-item',
+    published: [
+      'item'
+    ],
+    itemChanged: function(item) {
+      this.avatar = 'assets/avatar-0' + (index++ % 5) + '.png';
+      this.text = item.from + ' ' + item.count;
+      this.style.fontWeight = item.count ? 'bold' : '';
+      this.updateBindings();
+    }
+  });
+
+})();
+</script>

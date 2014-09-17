@@ -34,6 +34,7 @@
     },
     createdCallback: function() {
       this.initFeatures();
+      this.construct();
       this.createRoot();
       //if (!this.deferStamp) {
         this.stampTemplate();
@@ -42,6 +43,8 @@
       this.created();
       // requires bindings feature
       this.updateBindings();
+    },
+    construct: function() {
     },
     created: function() {
     },
