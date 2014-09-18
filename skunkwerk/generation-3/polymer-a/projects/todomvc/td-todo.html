@@ -21,17 +21,14 @@
   Polymer({
     name: 'td-todo',
     hostAttributes: 'horizontal center layout',
-    published: [
-      'item'
-    ],
+    remove: function() {
+      this.fire('item-remove', this.item);
+    },
     computed: {
       inputColor: 'computeInputColor(item.completed)'
     },
     computeInputColor: function(completed) {
       return completed ? 'silver' : '';
-    },
-    remove: function() {
-      this.fire('item-remove', this.item);
     }
   });
 

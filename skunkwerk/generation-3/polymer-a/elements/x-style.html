@@ -22,9 +22,9 @@
       }
     },
     stamp: function(elt) {
-      var style = document.createElement('style');
-      style.textContent = this.textContent;
-      elt.appendChild(style);
+      var cssText = this.firstElementChild ? this.firstElementChild.textContent 
+        : this.textContent;
+      elt.appendChild(document.createElement('style')).textContent = cssText;
     }
   });
   

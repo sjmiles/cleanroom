@@ -9,12 +9,8 @@
     ],
     created: function() {
       // TODO(sjmiles): ug
-      this.async(function() {
-        this.parseLocation();
-      });
-      addEventListener('popstate', function() {
-        this.parseLocation();
-      }.bind(this));
+      this.async(this.parseLocation);
+      addEventListener('popstate', this.parseLocation.bind(this));
     },
     parseLocation: function() {
       this.route = location.hash.slice(1);

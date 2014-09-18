@@ -2,147 +2,82 @@
 <link rel="import" href="../../../elements/x-repeater.html">
 <link rel="import" href="../../../elements/x-pages.html">
 <link rel="import" href="../../../elements/x-route.html">
+<link rel="import" href="../../../elements/x-style.html">
 
 <link rel="import" href="pi-topic-item.html">
 <link rel="import" href="pi-item.html">
 
+<link rel="import" href="pi-app-style.html">
+
 <template>
 
-<style>
-  :host {
-    background-color: #fafafa;
-    -webkit-user-select: none;
-  }
-  #drawer {
-    width: 256px; 
-    background-color: white;
-    box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.35)
-  }  
-  [header] {
-    height: 96px;
-    padding: 16px;
-    font-size: 1.3em;
-  }
-  [header] > * {
-    margin-right: 8px;
-  }
-  #drawer [header] {
-    color: #fafafa;
-    background-color: #02a8f3;
-  }
-  #main [header] {
-    color: #fafafa;
-    background-color: #069bde;
-  }
-  #topic [header] {
-    color: #fafafa;
-    background-color: #be9b06;
-  }
-  [menu]{
-    color: gray;
-    padding: 20px 0 0 16px;
-  }
-  [menu] > * {
-    margin-bottom: 16px;
-  }
-  [menu] x-icon {
-    margin-right: 16px;
-  }
-  x-repeater {
-    margin: 16px 32px;
-    text-align: center;
-  }
-  x-repeater * {
-    box-sizing: border-box;
-    height: 245px;
-    width: 210px;
-    margin: 4px;
-    text-align: left;
-  }
+  <x-style ref="pi-app"></x-style>
+  <x-route route:="page"></x-route>
 
-  /* main */
+  <div id="drawer" vertical layout>
 
-  #main x-repeater {
-    display: flex !important;
-  }
-  #main x-repeater * {
-    display: inline-flex;
-    flex-direction: column;
-  }
-  
-  /* topic */
- 
-  /* grid */
- 
-  /* quilt */
-  #topic[quilt] x-repeater {
-    display: inline-block;
-    text-align: center;
-    width: 880px;
-    margin: 0 auto;
-  }
-  #topic[quilt] x-repeater * {
-    float: left;
-  }
-  #topic[quilt] x-repeater *:nth-of-type(18n),
-  #topic[quilt] x-repeater *:nth-of-type(18n-1),
-  #topic[quilt] x-repeater *:nth-of-type(18n-2)
-  #topic[quilt] x-repeater *:nth-of-type(18n-3),
-  #topic[quilt] x-repeater *:nth-of-type(18n-4), 
-  #topic[quilt] x-repeater *:nth-of-type(18n-5)
-  #topic[quilt] x-repeater *:nth-of-type(18n-6), 
-  #topic[quilt] x-repeater *:nth-of-type(18n-7), 
-  #topic[quilt] x-repeater *:nth-of-type(18n-8) {
-    float: right;
-  }
-  #topic[quilt] x-repeater *:nth-of-type(9n - 8) {
-    height: 498px;
-    width: 428px;
-  }
-</style>
+    <div flex none header>
+      <div horizontal layout>
+        <span flex>Pica</span> 
+        <x-icon icon="apps" on-click="closeDrawerAction"></x-icon>
+      </div>
+    </div>
 
-<x-route route*="{{page}}"></x-route>
-
-<div id="drawer" flex none vertical layout>
-  
-  <div flex none header>Pica</div>
-  
-  <div flex scroll vertical layout menu>
-    <span><x-icon icon="apps"></x-icon>Home</span>
-    <span><x-icon icon="apps"></x-icon>Topics</span>
-    <span><x-icon icon="apps"></x-icon>Explore</span>
-    <span><x-icon icon="apps"></x-icon>Accounts</span>
+    <div flex scroll vertical layout menu on-click="closeDrawerAction">
+      <!--<item><x-icon icon="apps"></x-icon>Home</item>-->
+      <item on-click="topicsAction"><x-icon icon="apps"></x-icon>Topics</item>
+      <item><x-icon icon="apps"></x-icon>Explore</item>
+      <item><x-icon icon="apps"></x-icon>Accounts</item>
+    </div>
+    
   </div>
-  
-</div>
 
-<x-pages flex vertical layout selected*="{{page}}">
+  <x-pages flex vertical layout selected:="page">
 
-  <div id="main" flex vertical layout>
-    <div flex none header horizontal layout>
-      <x-icon icon="apps"></x-icon>
-      <span flex>Topics</span>
-      <x-icon icon="apps"></x-icon>
-      <x-icon icon="apps"></x-icon>
-    </div>
-    <div flex scroll>
-      <x-repeater horizontal center-justified wrap layout kind="pi-topic-item" items*="{{topics}}" on-click="mainClick"></x-repeater>
-    </div>
-  </div>  
-  
-  <div id="topic" flex vertical layout quilt="{{quilt}}">
-    <div flex none header horizontal layout>
-      <x-icon icon="back" on-click="backClick"></x-icon>
-      <span flex>Topics</span>
-      <x-icon icon="apps" on-click="layoutClick"></x-icon>
-      <x-icon icon="apps"></x-icon>
-    </div>
-    <div flex scroll>
-      <x-repeater kind="pi-item" items*="{{items}}" on-click="itemClick"></x-repeater>
-    </div>
-  </div>  
+    <div id="main" flex vertical layout>
+      <div flex none header horizontal layout>
+        <x-icon icon="apps" on-click="openDrawerAction"></x-icon>
+        <span flex>Topics</span>
+        <x-icon icon="apps"></x-icon>
+        <x-icon icon="apps"></x-icon>
+      </div>
+      <div flex scroll style="overflow-y: scroll;">
+        <x-repeater id="topics" horizontal center-justified wrap layout kind="pi-topic-item" items:="topics" on-click="topicAction"></x-repeater>
+      </div>
+    </div>  
 
-</x-pages>
+    <div id="topic" flex vertical layout quilt="{{quilt}}">
+      <div flex none header horizontal layout>
+        <x-icon icon="apps" on-click="openDrawerAction"></x-icon>
+        <x-icon icon="back" on-click="topicsAction"></x-icon>
+        <span flex>Topic</span>
+        <x-icon icon="apps" on-click="toggleLayoutAction"></x-icon>
+        <x-icon icon="apps"></x-icon>
+      </div>
+      <div flex scroll style="overflow-y: scroll;">
+        <x-repeater id="articles" kind="pi-item" items:="items" on-click="articleAction"></x-repeater>
+      </div>
+    </div>  
+
+    <div id="article" flex vertical center layout>
+      <div flex none self-stretch header horizontal layout>
+        <x-icon icon="apps" on-click="openDrawerAction"></x-icon>
+        <x-icon icon="back" on-click="topicAction"></x-icon>
+        <span flex>Article</span>
+        <x-icon icon="apps"></x-icon>
+      </div>
+      <div content flex vertical layout>
+        <a-title>Google's CEO is pushing for hyper-efficient airports and other moonshots</a-title>
+        <a-byline>by Chris Velazco on 9/17/2014 9:25:00 PM</a-byline>
+        <img src="http://o.aolcdn.com/hss/storage/midas/106f00785d3ab8a0310e90cb9f96aef8/200775546/larry-page_thumbnail.jpg">
+        <a-text>The Google we already know controls our pockets, makes sense 
+        of the web and wants to understand our behavior. That one company 
+        already has such extensive reach is pretty crazy, which also raises 
+        a weighty question: What would a Google 2.0 look like? ...</a-text>
+      </div>
+    </div>  
+    
+  </x-pages>
 
 </template><script>
 
@@ -154,17 +89,42 @@
       this.items = mock.technology;
       this.quilt = false;
     },
-    mainClick: function() {
+    openDrawerAction: function( ){
+      this.$('#drawer').setAttribute('open', '');
+    },
+    closeDrawerAction: function() {
+      this.$('#drawer').removeAttribute('open');
+    },
+    topicsAction: function() {
+      this.page = 0;
+      this.animatize(this.$('#topics'));
+    },
+    topicAction: function() {
       this.page = 1;
+      this.animatize(this.$('#articles'));
     },
-    itemClick: function() {
-      this.page = 0;
+    articleAction: function() {
+      this.page = 2;
+      this.animatize(this.$('[content]'));
     },
-    backClick: function() {
-      this.page = 0;
-    },
-    layoutClick: function() {
+    toggleLayoutAction: function() {
       this.quilt = !this.quilt;
+    },
+    animatize: function(container) {
+      var a$ = container;
+      a$.className = '';
+      for (var i=0, c=a$.firstElementChild; c; c=c.nextElementSibling, i++) {
+        //c.style.webkitTransform = 'translateY(' + (Math.floor(Math.random()*100) + 100) + 'px)';
+        c.style.webkitTransform = 'translateY(' + (Math.pow(i, 2.2)*3 + 50) + 'px)';
+      }
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          a$.className = 'animate';
+          for (var c=a$.firstElementChild; c; c=c.nextElementSibling) {
+            c.style.webkitTransform = 'translateY(0px)';
+          }
+        });
+      });
     }
   });
 
@@ -218,4 +178,5 @@
   for (var i=0; i<8; i++) {
     a.push({});
   }
+
 </script>
