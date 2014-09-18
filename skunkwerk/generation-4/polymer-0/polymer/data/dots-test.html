@@ -1,0 +1,38 @@
+<link rel="import" href="../lang.html">
+<link rel="import" href="Datum.html">
+<link rel="import" href="PathDatum.html">
+
+<script>
+
+  var defineProperty = function(object, name) {
+    var concrete = '_' + name;
+    object[concrete] = new Datum();
+    Object.defineProperty(object, name, {
+      get: function() {
+        return this[concrete].value;
+      },
+      set: function(value) {
+        this[concrete].value = value;
+      }
+    });
+  };
+
+  var A = {};
+  defineProperty(A, 'b');
+  A._b.watch(function() {
+    console.log('A.b changed');
+  });
+  A._b.propertiesWatch(function() {
+    console.log('property of A.b changed');
+  });
+
+  A.b = {};
+  defineProperty(A.b, 'c');
+  A.b._c.watch(function() {
+    console.log('b.c changed');
+    A._b.notifyProperties();
+  });
+
+  A.b.c = 'foo';
+
+</script>
