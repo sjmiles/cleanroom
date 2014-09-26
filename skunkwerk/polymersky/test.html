@@ -1,0 +1,18 @@
+<link rel="import" href="polymer/polymer.html">
+
+<style>
+  body {
+    font-family: sans-serif;
+  }
+</style>
+
+<x-boldizer>Bold Am I?</x-boldizer>
+
+<script>
+  Polymer({
+    name: 'x-boldizer',
+    createdCallback: function() {
+      this.innerHTML = '<b>' + this.innerHTML + '</b>';
+    }
+  });
+</script>

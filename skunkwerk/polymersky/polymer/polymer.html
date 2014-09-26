@@ -1,0 +1,16 @@
+<link rel="import" href="base.html">
+<link rel="import" href="features.html">
+
+<script>
+  Base.installFeatures();
+  Base.__proto__ = HTMLElement.prototype;
+  
+  var Polymer = function(prototype) {
+    prototype.__proto__ = Base;
+    prototype.registerCallback();
+    document.registerElement(prototype.name, {prototype: prototype});
+  }
+  
+  Polymer.log = {
+  };
+</script>

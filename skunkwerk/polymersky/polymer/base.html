@@ -1,0 +1,27 @@
+<script>
+
+  var attributes = function(node, attr$) {
+    attr$.split(' ').forEach(function(a) {
+      node.setAttribute(a, '');
+    });
+  };
+  
+  Base = {
+    // (semi-)pluggable features for Base
+    features: [],
+    installFeatures: function() {
+      // simple engine to modularize features
+      Base.features.forEach(function(f) {
+        extend(Base, f);  
+      });
+      delete Base.init;
+      delete Base.installFeatures;
+    },
+    registerCallback: function() {
+      // `this` context is a prototype, not an instance
+      var prototype = this;
+      prototype._template = document.currentScript.ownerDocument.querySelector('template');
+    }
+  };
+  
+</script>
