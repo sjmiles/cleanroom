@@ -37,21 +37,24 @@ Datum.prototype = {
     return this._value;
   },
   set value(value) {
-    var old = this._value;
+    var old = this.value;
     if (old !== value) {
-      this.decorateValue(value);
       this._value = value;
-      this.notify(old);
+      this.afterSetValue(value, old);
     }
   },
-  decorateValue: function(value) {
+  //
+  // TODO(sjmiles): this bit is the whole 'observation' implementation
+  afterSetValue: function(value, old) {
     // TODO(sjmiles): experimental
     if (value instanceof Array) {
+      //console.log('decorating Array');
       // TODO(sjmiles): how costly is this?
       extend(value, ArrayTrap);
-      // TODO(sjmiles): attaching client this way is problematic
+      // TODO(sjmiles): binding client this way is problematic
       value.client = this;
     }
+    this.notify(old);
   },
   //
   notify: function(old) {

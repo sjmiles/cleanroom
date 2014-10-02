@@ -54,8 +54,8 @@ Polymer({
     this.style.visibility = visibility;
   },
   computeBackground: function(item) {
-    return item && item.topic && 'url(assets/' + item.topic.toLowerCase() 
-      + '.jpg)';
+    return item && item.thumb && 'url(' + item.thumb + ')';
+    //return item && item.topic && 'url(assets/' + item.topic.toLowerCase() + '.jpg)';
   }
 });
 

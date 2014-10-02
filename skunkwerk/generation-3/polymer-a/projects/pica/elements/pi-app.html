@@ -3,6 +3,7 @@
 <link rel="import" href="../../../elements/x-pages.html">
 <link rel="import" href="../../../elements/x-route.html">
 <link rel="import" href="../../../elements/x-style.html">
+<link rel="import" href="../../../google-apis/google-feeds.html">
 
 <link rel="import" href="pi-topic-item.html">
 <link rel="import" href="pi-item.html">
@@ -114,7 +115,6 @@
       var a$ = container;
       a$.className = '';
       for (var i=0, c=a$.firstElementChild; c; c=c.nextElementSibling, i++) {
-        //c.style.webkitTransform = 'translateY(' + (Math.floor(Math.random()*100) + 100) + 'px)';
         c.style.webkitTransform = 'translateY(' + (Math.pow(i, 2.2)*3 + 50) + 'px)';
       }
       requestAnimationFrame(function() {
@@ -131,28 +131,37 @@
   var mock = {
     items: [
       {
-        topic: "Technology"
+        topic: 'Technology',
+        thumb: 'assets/technology.jpg',
+        feed: 'http://feeds.feedburner.com/hypebeast/feed'
       },
       {
-        topic: "Sports"
+        topic: 'Sports',
+        thumb: 'assets/sports.jpg'
       },
       {
-        topic: "Music"
+        topic: 'Music',
+        thumb: 'assets/music.jpg'
       },
       {
-        topic: "Art"
+        topic: 'Art',
+        thumb: 'assets/art.jpg'
       },
       {
-        topic: "Fashion"
+        topic: 'Fashion',
+        thumb: 'assets/fashion.jpg'
       },
       {
-        topic: "Architecture"
+        topic: 'Architecture',
+        thumb: 'assets/architecture.jpg'
       },
       {
-        topic: "Design"
+        topic: 'Design',
+        thumb: 'assets/design.jpg'
       },
       {
-        topic: "Food"
+        topic: 'Food',
+        thumb: 'assets/food.jpg'
       },
       {},
       {},
@@ -179,4 +188,36 @@
     a.push({});
   }
 
+/*
+  var fetchImageForTopic = function(topic) {
+    var fa = document.createElement('google-feeds');
+    fa.count = 4;
+    // action
+    fa.feed = topic.feed;
+    // result
+    fa.addEventListener('response', function(e) {
+      var ns = e.detail && e.detail.feed && e.detail.feed.entries || [];
+      console.log(ns);
+      ns.forEach(function(n) {
+        if (n.imgSrc) {
+          var image = new Image();
+          // action
+          image.src = n.imgSrc;
+          // result
+          image.onload = function(e) {
+            console.log(img.src);
+            var img = e.currentTarget;
+            // use the image if the size > 10x10px
+            if (img.width > 10 && img.height > 10 && !t.imgSrc) {
+              t.thumb = img.src;
+            }
+          }.bind(this);
+        }
+      });
+    });
+  };
+  fetchImageForTopic(mock.items[0]);
+*/
+
+  
 </script>

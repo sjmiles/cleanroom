@@ -53,7 +53,7 @@
       }
     </style>
   
-    <td-model items:="items" filter:="filter" filtered:="filtered" completed:="completed"></td-model> 
+    <!--<td-model items:="items" filter:="filter" filtered:="filtered" completed:="completed"></td-model>--> 
     
     <input is="x-input" placeholder="What to do?" $editvalue:="newValue"></input>
   
@@ -85,6 +85,7 @@
       hostAttributes: 'vertical layout',
       // event listeners to set on host
       listeners: {
+        'item-change': 'filteredItemChange',
         'item-remove': 'itemRemove'
       },
       // map handlers to key-codes for keypress on host
@@ -96,13 +97,17 @@
       // instance setup after template stamping
       //
       created: function() {
-        this.model = this.$('td-model');
-        this.items = [
+        this.model = tdModel;
+        this.items = tdModel.items;
           {value: 'Extend the web', completed: true},
           {value: 'Dethrone native apps'}, 
           {value: 'Party'}
         ];
         this.filter = 'all';
+        
+      },
+      filterChanged: function() {
+        tdModel.filter = this.filter;
       },
       //
       // event handlers

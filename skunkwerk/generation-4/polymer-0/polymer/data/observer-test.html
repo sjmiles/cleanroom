@@ -1,0 +1,95 @@
+<link rel="import" href="../lang.html">
+<link rel="import" href="Datum.html">
+<link rel="import" href="ObserverDatum.html">
+<link rel="import" href="PathDatum.html">
+
+<script>
+  //
+  // a Datum holds a value
+  //
+  var d = new Datum();
+  d.value = 42;
+  console.assert(42 === d.value, 'd.value incorrect');
+  //
+  // Datum value can be an object
+  //
+  var model = new Datum();
+  model.value = {foo: 99, bar: 'abc'};
+  console.assert(model.value.foo === 99 && model.value.bar === 'abc', 
+    'model.value incorrect');
+  //
+  // a PathDatum represents a property on an object-valued Datum
+  //
+  var p = new PathDatum(model, 'foo');
+  console.assert(99 === p.value, 'p.value incorrect');
+  // 
+  model.value.foo = 'datum';
+  console.assert('datum' === p.value, 'p.value incorrect');
+  //
+  // watch functions can be attached to Datum instances to observe changes
+  //
+  model.watch(function(value, old) {
+    console.log('[model.watch] before after: ', old, value);
+  });
+  model.value = {foo: 99, bar: 'abc'};
+  //
+  // watches only fire if new !== old
+  //
+  model.value = model.value;
+  //
+  // watch functions attached to two Datums can be merged
+  //
+  var other = new Datum();
+  other.watch(function(value, old) {
+    console.log('[other.watch] before, after: ', old, value);
+  });
+  model.merge(other);
+  console.group('setting model.value after merge');
+  model.value = {foo: 99, bar: 'abc'};
+  console.groupEnd();
+  //
+  // watch functions can be attached to observe changes to dependent PathDatum
+  //
+  model.propertiesWatch(function(value, property) {
+    console.log('model property [%s] changed to [%o]', property, 
+      value[property]);
+  });
+  p.value = 'foo-property-value';
+  //
+  //
+  //
+  //
+  // We can use a Datum as backing-store for a managed property on an Object
+  //
+  var defineProperty = function(object, name) {
+    var concrete = '_' + name;
+    object[concrete] = new Datum();
+    Object.defineProperty(object, name, {
+      get: function() {
+        return this[concrete].value;
+      },
+      set: function(value) {
+        this[concrete].value = value;
+      }
+    });    
+  };
+  //
+  var A = {};
+  defineProperty(A, 'foo');
+  A.foo = 3.14;
+  console.assert(3.14 === A.foo, 'A.foo incorrect');
+  //
+  // We can BIND two managed properties by pointing them at the same Datum
+  //
+  var B = {};
+  defineProperty(B, 'bar');
+  B.bar = -1;
+  console.assert(-1 === B.bar, 'B.bar incorrect');
+  //
+  var bindProperty = function(a, propA, b, propB) {
+    b['_' + propB] = a['_' + propA];
+  };
+  bindProperty(A, 'foo', B, 'bar');
+  console.assert(3.14 === A.foo && A.foo === B.bar, 'bind failed');
+  //
+</script>

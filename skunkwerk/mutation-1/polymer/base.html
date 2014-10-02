@@ -1,0 +1,46 @@
+<script>
+
+  Base = {
+    // (semi-)pluggable features for Base
+    _features: [],
+    addFeature: function(feature) {
+      this._features.push(feature);
+    },
+    installFeatures: function() {
+      // simple engine to modularize features
+      Base._features.forEach(function(f) {
+        extend(Base, f);  
+      });
+      delete Base.init;
+      delete Base.register;
+      delete Base.installFeatures;
+      delete Base.addFeature;
+    },
+    registerCallback: function() {
+      // `this` context is a prototype, not an instance
+      var prototype = this;
+      prototype._template = 
+        document.currentScript.ownerDocument.querySelector('template');
+      this.registerFeatures(prototype);
+    },
+    registerFeatures: function(prototype) {
+      Base._features.forEach(function(f) {
+        f.register && f.register(prototype);
+      }, this);
+    },
+    createdCallback: function() {
+      this.root = this;
+      this.initFeatures();
+      this.created();
+    },
+    initFeatures: function() {
+      Base._features.forEach(function(f) {
+        f.init && f.init.call(this);
+      }, this);
+    },
+    created: function() {
+    }
+  };
+  
+
+</script>

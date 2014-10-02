@@ -1,0 +1,13 @@
+<script>
+
+OldDatum = Datum;
+Datum = function() {
+  OldDatum.call(this);
+  Object.observe(this, this.notify.bind(this));
+}
+Datum.prototype = OldDatum.prototype;
+
+Datum.prototype.afterSetValue = function(value, old) {
+};
+
+</script>

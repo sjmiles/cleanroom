@@ -1,0 +1,18 @@
+<script>
+
+  Base.addFeature({
+    register: function(prototype) {
+      prototype._template = window.import.querySelector('template');
+    },
+    stampTemplate: function(template) {
+      this._stampTemplate(template || this._template, this.root);
+    },
+    _stampTemplate: function(template, target) {
+      target.appendChild(this.instanceTemplate(template));
+    },
+    instanceTemplate: function(template) {
+      return document.importNode(template.content, true);
+    }
+  });
+  
+</script>

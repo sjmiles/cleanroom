@@ -1,33 +1,15 @@
 <script>
 
-  Polymer({
-    name: 'td-model',
-    //
-    // public api
-    //
-    published: [
-      'items',
-      'filter',
-    ],
-    computed: {
-      completed: 'computeCompleted(items)',
-      filtered: 'computeFiltered(items, filter)'
-    },
-    created: function() {
-      // TODO(sjmiles): a change to filtered properties is really a change
-      // in items properties, can we normalize this?
-      this.propertiesWatch('filtered', function() {
-        this.notifyChange('items');
-      }.bind(this));
-      // TODO(sjmiles): simulate server push update
-      //setInterval(this.serverUpdate.bind(this), 2000);
-    },
+  tdModel = {
     add: function(item) {
       this.items.push(item);
     },
     remove: function(item) {
-      var i = this.items.indexOf(item);
-      this.items.splice(i, 1);
+      this.items.splice(this.items.indexOf(item), 1);
+    },
+    recompute: function() {
+      this.computeCompleted(this.items);
+      this.computeFiltered(this.items, this.filter);
     },
     //
     // stateless computations
@@ -63,6 +45,7 @@
       console.log(i, item);
       this.notifyChange('items');
     } 
-  });
+  };
+
 
 </script>

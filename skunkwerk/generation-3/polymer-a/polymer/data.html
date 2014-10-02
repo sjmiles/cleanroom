@@ -1,3 +1,5 @@
+<link rel="import" href="telemetry.html">
+
 <script>
 
 // TODO(sjmiles): when binding properties that are themselves bound,
@@ -41,6 +43,7 @@
  * `merge` method collapses a DataClient into this one, combining
  * all watchers and referers.
  */
+
 function Datum(value) {
   this.value = value;
   // we require back references so we can merge datums
@@ -48,7 +51,14 @@ function Datum(value) {
   // but then we already have this problem wrt watchers
   // a 'referer' must be a DataClient
   this.referers = [];
+  if (Datum.useObserve) {
+    Object.observe(this, this.notify.bind(this));
+  }
 }
+
+//Datum.useObserve = true;
+
+Datum.telemetry = [];
 
 Datum.prototype = {
   addReferer: function(client, name) {
@@ -78,19 +88,26 @@ Datum.prototype = {
   setValue: function(value) {
     var old = this.value;
     if (old !== value) {
-      this.decorateValue(value);
       this.value = value;
-      this.notify(old);
+      this.afterSetValue(value, old);
     }
   },
-  decorateValue: function(value) {
+  // TODO(sjmiles): this bit is the whole 'observation' implementation
+  afterSetValue: function(value, old) {
     // TODO(sjmiles): experimental
     if (value instanceof Array) {
-      //console.log('decorating Array');
-      // TODO(sjmiles): how costly is this?
-      extend(value, ArrayTrap);
-      // TODO(sjmiles): binding client this way is problematic
-      value.client = this;
+      if (Datum.useObserve) {
+        Object.observe(value, this.notify.bind(this));
+      } else {
+        //console.log('decorating Array');
+        // TODO(sjmiles): how costly is this?
+        extend(value, ArrayTrap);
+        // TODO(sjmiles): binding client this way is problematic
+        value.client = this;
+      }
+    }
+    if (!Datum.useObserve) {
+      this.notify(old);
     }
   },
   notify: function(old) {
@@ -164,7 +181,7 @@ ArrayTrap = Object.create(null);
 var PathDatum = function(model, path) {
   this.referers = [];
   this.model = model;
-  this.path = path;
+  this.path = String(path).split('.');
   // if the model changes, we change (no dirty check)
   this.model.watch(this.selfNotify.bind(this));
   // we must 'refer' to the model because it may get merged
@@ -174,6 +191,14 @@ var PathDatum = function(model, path) {
     // TODO(sjmiles): closure here for debugging/tracing
     this.notify();
   }.bind(this));
+  //
+  if (Datum.useObserve) {
+    this.observeFn = this.notify.bind(this);
+    /*this.observeFn = function() {
+      console.log('PathDatum observer: ', arguments);
+    }.bind(this);*/
+    this.observeData();
+  }
 };
 PathDatum.prototype = Object.create(Datum.prototype);
 extend(PathDatum.prototype, {
@@ -188,16 +213,41 @@ extend(PathDatum.prototype, {
   },
   selfNotify: function() {
     Datum.prototype.notify.call(this);
+    if (Datum.useObserve) {
+      this.observeData();
+    }
+  },
+  observeData: function() {
+    var value = this.value;
+    if (value !== this.lastObserved) {
+      if (this.lastObserved) {
+        Object.unobserve(this.lastObserved, this.observeFn);
+      }   
+      this.lastObserved = (typeof value === 'object' ? value : null);
+      if (this.lastObserved) {
+        //console.log('observing: ', this.lastObserved);
+        Object.observe(this.lastObserved, this.observeFn);
+      }
+    }
   },
   set value(value) {
     var o = this.model.value;
     if (o) {
-      o[this.path] = value;
+      for (var i=0, l=this.path.length-1; o && i<l; i++) {
+        o = o[this.path[i]];
+      }
+      if (o) {
+        o[this.path[i]] = value;
+      }
     }
   },
   get value() {
     var o = this.model.value;
-    return o && o[this.path];
+    for (var i=0, l=this.path.length; o && i<l; i++) {
+      o = o[this.path[i]];
+    }
+    return o;
+    //return o && o[this.path];
   }
 });
 
@@ -290,11 +340,27 @@ DataClient = {
   notifyChange: function(name) {
     Polymer.log.watches && console.log('[notifyChange]: [%s]', name);
     var datum = this._data[name];
-    datum.notify(datum.value);
+    Datum.telemetry.push({
+      kind: 'notifyChange',
+      target: this.localName,
+      name: name,
+      value: datum.value
+    });
+    if (datum.selfNotify) {
+      datum.selfNotify(datum.value);
+    } else {
+      datum.notify(datum.value);
+    }
   },
   notifyPropertiesChange: function(name) {
     Polymer.log.watches && console.log('[notifyPropertiesChange]: [%s]', name);
     var datum = this._data[name];
+    Datum.telemetry.push({
+      kind: 'notifyPropertiesChange',
+      target: this.localName,
+      name: name,
+      value: datum.value
+    });
     datum.notifyProperties(datum.value);
   },
   watch: function(name, notify) {
@@ -419,6 +485,12 @@ DataClient = {
         },
         set: function(value) {
           Polymer.log.watches && console.group('[%s.set] [%s] = [%s]', this.localName, name, value);
+          Datum.telemetry.push({
+            kind: 'set',
+            target: this.localName,
+            name: name,
+            value: value
+          });
           this._data[name].setValue(value);
           Polymer.log.watches && console.groupEnd();
         }

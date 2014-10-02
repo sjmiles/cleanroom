@@ -1,0 +1,19 @@
+<script>
+
+tfind = function(name) {
+  Datum.telemetry.forEach(function(t) {
+    if (t.name === name) {
+      console.log(t);
+    }
+  });
+};
+
+tcollate = function(name) {
+  var collate = {};
+  Datum.telemetry.forEach(function(t) {
+    collate[t.name] = 1;
+  });
+  console.log(collate);
+};
+
+</script>
