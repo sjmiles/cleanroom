@@ -91,7 +91,7 @@
       // ask the template engine to update the DOM from data
       this.updateBindings();
       // manual DOM updates
-      var read = Date.parse(this.item.date) + 8*24*60*60*1000 < Date.now();
+      var read = Date.parse(this.item.date) < new Date('8/15/2014');
       this.style.fontWeight = read ? '' : 'bold';
       this.style.backgroundColor = read ? '#f8f8f8' : '';
     },

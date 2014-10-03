@@ -10,13 +10,12 @@
       cursor: pointer;
       border-bottom: 1px solid #eeeeee;
       min-width: 900px;
+      padding: 8px 0 8px 8px;
+      font-weight: bold;
     }
     :host(.read) {
-      font-weight: normal;
+      font-weight: normal !important;
       background-color: #f8f8f8;
-    }
-    div {
-      padding: 8px 0 8px 8px;
     }
     :host > * {
       overflow: hidden;
@@ -35,18 +34,13 @@
     :host > span {
       margin-right: 8px;
     }
-    div {
-      font-weight: bold;
-    }
   </style>
   
-  <div id="container" flex horizontal center layout>
-    <x-icon id="checkbox"></x-icon><x-icon icon="apps"></x-icon><x-icon icon="archive"></x-icon>
-    <from flex><span id="from"></span> <span id="count"></span></from>
-    <span flex five><subject><span id="subject"></span>.</subject> - <blurb><span id="blurb"></span>.</blurb></span>
-    <x-icon icon="apps"></x-icon>
-    <date id="date"></date>
-  </div>
+  <x-icon id="checkbox"></x-icon><x-icon icon="apps"></x-icon><x-icon icon="archive"></x-icon>
+  <from flex><span id="from"></span> <span id="count"></span></from>
+  <span flex five><subject><span id="subject"></span>.</subject> - <blurb><span id="blurb"></span>.</blurb></span>
+  <x-icon icon="apps"></x-icon>
+  <date id="date"></date>
 
 </template>
 <script>
@@ -77,7 +71,7 @@
       this.className = this.computeItemClass(item);
     },
     computeItemClass: function(item) {
-      return Date.parse(this.item.date) + 42*24*60*60*1000 < Date.now() ? 
+      return Date.parse(this.item.date) < new Date('8/15/2014') ? 
         'read' : '';
     },
     click: function(e) {
