@@ -1,0 +1,29 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<template>
+  
+  <style>
+    :host {
+      display: block;
+      background-color: lightblue;
+      height: 64px;
+      font-size: 1.3em;
+      padding-left: 6px;
+      padding-right: 8px;
+      cursor: pointer;
+    }
+    ::content > * {
+      margin-left: 8px;
+    }
+  </style>
+  <content></content>
+  
+</template>
+<script>
+
+  Polymer({
+    name: 'x-toolbar',
+    hostAttributes: 'horizontal center layout'
+  });
+
+</script>

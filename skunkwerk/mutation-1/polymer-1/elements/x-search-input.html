@@ -1,0 +1,40 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../elements/x-icon.html">
+<link rel="import" href="../elements/x-icon-button.html">
+
+<template>
+  
+  <style>
+    :host {
+    }
+    input-host {
+      background-color: white;
+      border: 1px solid silver;
+    }
+    /* 
+     * specificity problem vis /deep/ x-icon-button style solved 
+     * with attribute specifier 
+     */
+    x-icon-button[icon=search] {
+      margin: 0;
+      border: none;
+      background-color: #4387fd;
+      color: white;
+      border-radius: 0;
+    }
+  </style>
+
+  <input-host flex horizontal center layout>
+    <input flex style="border: none; padding: 9px 6px 8px;"></input><x-icon icon="drop" style="color: gray; width: 16px; height: 16px;"></x-icon>
+  </span>
+  <x-icon-button icon="search"></x-icon-button>
+
+</template>
+<script>
+
+  Polymer({
+    name: 'x-search-input',
+    hostAttributes: 'horizontal center layout'
+  });
+
+</script>

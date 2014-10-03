@@ -1,0 +1,31 @@
+<script>
+
+  var index = 0;
+  var days = 42*24*60*60*1000;
+  
+  Statics = {
+    computeItemClass: function(item) {
+      return Date.parse(item.date) + days < Date.now() ? 'read' : '';
+    },
+    computeAvatarSrc: function(item) {
+      return 'assets/avatar-0' + (index++ % 5) + '.png';
+    },
+    computeFontWeight: function(item) {
+      return item.count ? 'bold' : '';
+    }
+  };
+  
+  Lib = {
+    renderItems: function(parent, tag, items) {
+      parent.textContent = '';
+      var frag = document.createDocumentFragment();
+      items.forEach(function(i) {
+        var e = document.createElement(tag);
+        e.item = i;
+        frag.appendChild(e);
+      }, this);
+      parent.appendChild(frag);
+    }    
+  };
+
+</script>

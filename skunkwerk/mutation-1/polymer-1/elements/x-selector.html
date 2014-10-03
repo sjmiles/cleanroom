@@ -1,0 +1,25 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<script>
+
+  Polymer({
+    name: 'x-selector',
+    listeners: {
+      click: 'click'
+    },
+    click: function(e) {
+      this.selected = e.target;
+    },
+    set selected(selected) {
+      if (this._selected) {
+        this._selected.removeAttribute('selected');
+      } 
+      if (selected) {
+        selected.setAttribute('selected', '');
+        this._selected = selected;
+      }
+      this.fire('selected');
+    }
+  });
+
+</script>

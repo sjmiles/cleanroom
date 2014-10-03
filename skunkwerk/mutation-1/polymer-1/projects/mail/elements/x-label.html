@@ -1,0 +1,37 @@
+<template>
+
+  <style>
+    :host {
+      display: block;
+      font-size: 0.8em;
+      white-space: nowrap;
+      margin: 6px 0;
+      cursor: pointer;
+    }
+  </style>
+  
+  <span id="from"></span> <span id="count"></span>
+</template>
+
+<script>
+(function() {
+
+  Polymer({
+    name: 'x-label',
+    attachedCallback: function() {
+      this.render();
+    },
+    render: function() {
+      if (this.item) {
+        this.renderItem(this.item);
+      }
+    },
+    renderItem: function(item) {
+      this.$.from.textContent = item.from;
+      this.$.count.textContent = item.count;
+      this.style.fontWeight = Statics.computeFontWeight(item);
+    }
+  });
+
+})();
+</script>

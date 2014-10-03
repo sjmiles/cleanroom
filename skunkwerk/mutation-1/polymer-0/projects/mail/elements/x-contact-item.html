@@ -1,0 +1,55 @@
+<template>
+
+  <style>
+    :host {
+      display: block;
+      font-size: 0.8em;
+      white-space: nowrap;
+      margin: 6px 0;
+      cursor: pointer;
+    }
+    img {
+      width: 24px;
+      height: 24px;
+      vertical-align: middle;
+    }
+  </style>
+
+  <div horizontal center layout>  
+    <img id="avatar" avatar>&nbsp;<span id="from"></span> <span id="count"></span> 
+  </div>
+  
+</template>
+
+<script>
+(function() {
+
+  var index = 0;
+  
+  Polymer({
+    name: 'x-contact-item',
+    attachedCallback: function() {
+      this.render();
+    },
+    render: function() {
+      if (this.item) {
+        this.renderItem(this.item);
+      }
+    },
+    renderItem: function(item) {
+      this.$.from.textContent = item.from;
+      this.$.count.textContent = item.count;
+      this.$.avatar.src = this.computeAvatarSrc(item);
+      this.style.fontWeight = this.computeFontWeight(item);
+    },
+    // statics
+    computeAvatarSrc: function(item) {
+      return 'assets/avatar-0' + (index++ % 5) + '.png';
+    },
+    computeFontWeight: function(item) {
+      return item.count ? 'bold' : '';
+    }
+  });
+
+})();
+</script>

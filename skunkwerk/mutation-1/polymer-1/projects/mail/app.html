@@ -1,0 +1,129 @@
+<!doctype html>
+<html>
+<head>
+
+  <title>app</title>
+
+  <meta charset="utf-8">
+
+  <script src="../../lib/perf.js"></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="import" href="../../polymer/polymer.html">
+  
+  <link rel="import" href="../../elements/x-pages.html">
+  <link rel="import" href="../../elements/x-selector.html">
+
+  <link rel="import" href="elements/elements.html">
+
+  <link rel="import" href="assets/icons.html">
+  <link rel="import" href="assets/data.html">
+
+  <link rel="import" href="statics.html">
+
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="app.css">
+
+</head>
+<body fullbleed vertical layout>
+
+  <script>console.perf();</script>
+
+  <x-app flex></x-app>
+
+  <template>
+
+    <style>
+      :host {
+        display: block;
+      }
+      #otherBars {
+        margin-right: 16px;
+      }
+      #columns {
+       margin-left: 32px;  
+      }
+      #leftColumn {
+        width: 200px; 
+        margin-right: 8px;
+      }
+      x-selector#selector [selected] {
+        background-color: #FAF0E8 !important;
+      }
+      x-repeater {
+        display: block;
+      }
+    </style>
+
+    <!-- appbar -->
+    <x-appbar></x-appbar>
+
+    <!-- other bars -->
+    <div id="otherBars">
+      <x-mailbar id="mailbar" on-mailbar-back="mailListAction"></x-mailbar>
+      <x-composebar></x-composebar>
+    </div>
+
+    <!-- columns -->
+    <div id="columns" flex horizontal layout style="overflow: hidden;">
+
+      <!-- left column -->
+      <div id="leftColumn" vertical layout>
+        <x-repeater id="labels" scroll></x-repeater>
+        <x-contactbar></x-contactbar>
+        <x-repeater id="contacts" flex scroll></x-repeater>
+      </div>
+
+      <!-- main column -->   
+      <x-pages id="pages" flex vertical layout>
+        <x-selector id="selector" selected:="selectedItem" flex scroll>
+          <x-repeater id="mailList"></x-repeater>
+        </x-selector>
+        <div id="reader" flex>And now for something completely different...</div>
+      </x-pages>
+
+    </div>
+
+  </template>
+  <script>
+
+    Polymer({
+      name: 'x-app',
+      hostAttributes: 'vertical layout',
+      listeners: {
+        'mailbar-back': 'mailListAction',
+        'reader.click': 'mailListAction',
+        'selector.selected': 'selectorSelected'
+      },
+      created: function() {
+        this.selectedPage = 0;
+        this.mail = data.items;
+        this.labels = data.items.slice(0, 10);
+        this.contacts = data.items.slice(20, 35);
+        this.render();
+      },
+      render: function() {
+        Lib.renderItems(this.$.mailList, 'x-item', this.mail);
+        Lib.renderItems(this.$.labels, 'x-label', this.labels);
+        Lib.renderItems(this.$.contacts, 'x-contact-item', this.contacts);
+      },
+      mailListAction: function(e) {
+        this.selectedPage = 0;
+      },
+      selectorSelected: function(e) {
+        this.selectedItem = e.target.selected;
+        this.selectedPage = 1;
+      },
+      set selectedPage(page) {
+        this.$.pages.selected = page;
+        this.$.mailbar.selected = page;
+      }
+    });
+
+  </script>
+
+  <script>console.perfEnd();</script>
+
+</body>
+</html>

@@ -1,0 +1,29 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<template>
+  
+  <style>
+    ::content > :not([selected]) {
+      display: none !important;
+    }
+  </style>
+  
+  <content id="pages"></content>
+
+</template>
+<script>
+
+  Polymer({
+    name: 'x-pages',
+    set selected(selected) {
+      selected = Number(selected);
+      var pages = this.$.pages.getDistributedNodes();
+      for (var i=0, p; p=pages[i]; i++) {
+        if (p.nodeType === Node.ELEMENT_NODE) {
+          p[!selected-- ? 'setAttribute' : 'removeAttribute']('selected', '');
+        }
+      }
+    }
+  });
+
+</script>

@@ -1,0 +1,45 @@
+<script>
+
+  Base.addFeature({
+    published: {},
+    init: function() {
+    },
+    publishPublished: function() {
+      this.proxyObservedModel('_observedModel', this.published);
+    },
+    proxyObservedModel: function(model, published) {
+      this[model] = {};
+      Object.keys(published).forEach(function(k) {
+        // TODO(sjmiles): preprocess in register instead
+        this._defineAccessors(model, k);
+        this[model][k] = published[k];
+      }, this);
+      Object.observe(this[model], this.modelNotify.bind(this));
+    },
+    _defineAccessors: function(model, name) {
+      if (!this.hasOwnProperty(name)) {
+        Object.defineProperty(this, name, {
+          get: function() {
+            return this[model][name];
+          },
+          set: function(value) {
+            this[model][name] = value;
+          }
+        });      
+      }
+    },
+    modelNotify: function(records) {
+      records.forEach(function(r) {
+        if (r.type === 'update') {
+          var fn = r.name + 'Changed';
+          // TODO(sjmiles): known bad, make a whitelist
+          if (this[fn]) {
+            this[fn](r.oldValue);
+          }
+        }
+      }, this);
+      this.log('pubModelNotify: ', arguments);
+    }
+  });
+  
+</script>

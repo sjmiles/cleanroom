@@ -1,0 +1,87 @@
+<link rel="import" href="../../../elements/x-icon.html">
+
+<template>
+
+  <style>
+    :host {
+      display: block;
+      font-size: 0.8em;
+      white-space: nowrap;
+      cursor: pointer;
+      border-bottom: 1px solid #eeeeee;
+      min-width: 900px;
+    }
+    :host(.read) {
+      font-weight: normal;
+      background-color: #f8f8f8;
+    }
+    div {
+      padding: 8px 0 8px 8px;
+    }
+    :host > * {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    from, date {
+      margin: 0 1em;
+    }
+    date {
+      text-align: right;
+      width: 6em;
+    }
+    blurb {
+      color: gray;
+    }
+    :host > span {
+      margin-right: 8px;
+    }
+    div {
+      font-weight: bold;
+    }
+  </style>
+  
+  <div id="container" flex horizontal center layout>
+    <x-icon id="checkbox"></x-icon><x-icon icon="apps"></x-icon><x-icon icon="archive"></x-icon>
+    <from flex><span id="from"></span> <span id="count"></span></from>
+    <span flex five><subject><span id="subject"></span>.</subject> - <blurb><span id="blurb"></span>.</blurb></span>
+    <x-icon icon="apps"></x-icon>
+    <date id="date"></date>
+  </div>
+
+</template>
+<script>
+
+  Polymer({
+    name: 'x-item',
+    hostAttributes: 'horizontal center layout',
+    listeners: {
+      'checkbox.click': 'click'
+    },
+    created: function() {
+      this.$.checkbox.icon = 'box';
+    },
+    attachedCallback: function() {
+      this.render();
+    },
+    render: function() {
+      if (this.item) {
+        this.renderItem(this.item);
+      }
+    },
+    renderItem: function(item) {
+      this.$.subject.textContent = item.subject;
+      this.$.blurb.textContent = item.blurb;
+      this.$.count.textContent = item.count;
+      this.$.from.textContent = item.from;
+      this.$.date.textContent = item.date;
+      this.className = Statics.computeItemClass(item);
+    },
+    click: function(e) {
+      this.$.checkbox.icon = 
+        (this.$.checkbox.icon === 'box') ? 'checked' : 'box';
+      e.stopPropagation();
+    }
+  });
+
+</script>
+
