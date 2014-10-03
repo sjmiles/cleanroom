@@ -44,6 +44,7 @@
       this.frame = this.$('#frame');
       this.attributeChangedCallback('runs');
       this.attributeChangedCallback('base');
+      addEventListener('message', this.scoreMessage.bind(this));
     },
     attributeChangedCallback: function(name) {
       var value = this.getAttribute(name);
@@ -117,15 +118,17 @@
       });
     },
     measure: function(next) {
-      // poll the document title until it reports a perf value
-      var it = setInterval(function() {
-        var time = this.frame.contentDocument.title;
+      this.afterScore = next;
+    },
+    scoreMessage: function(e) {
+      if (this.afterScore) {
+        var time = e.data;
         if (time.slice(-2) === 'ms') {
-          clearInterval(it);
           time = Number(time.slice(0, -2));
-          next.call(this, time);
-        }
-      }.bind(this), 10);
+          this.afterScore(time);
+          this.afterScore = null;
+        }        
+      }
     },
     record: function(time) {
       //console.log('index [%d], test [%d] time [%d]', this.index, this.test, time);

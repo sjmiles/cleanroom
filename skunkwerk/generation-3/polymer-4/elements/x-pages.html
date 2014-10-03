@@ -17,10 +17,9 @@
     created: function() {
       this.publishProperty('selected');
       this.watch('selected', this.selectedChanged);
-      // eek
-      setTimeout(function() {
-        this.selected = 0;
-      }.bind(this), 0);
+    },
+    attachedCallback: function() {
+      this.selected = this.selected || 0;
     },
     selectedChanged: function(selected) {
       var pages = this.$('#pages').getDistributedNodes();
