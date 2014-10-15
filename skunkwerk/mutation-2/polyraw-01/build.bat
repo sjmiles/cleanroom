@@ -1,0 +1,1 @@
+vulcanize build-proxy.html --inline -output dist/polymer.html

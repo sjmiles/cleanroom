@@ -20,7 +20,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   [
     //'../observe-js/src/observe.js',
-    '../WeakMap/weakmap.js',
+    '../WeakMap/WeakMap.js',
     'src/ArraySplice.js',
     'src/wrappers.js',
     'src/microtask.js',

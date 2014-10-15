@@ -1,0 +1,217 @@
+<script>
+  // a tiny bit of sugar for `document.currentScript.ownerDocument`
+  // sadly `import` is reserved, so we need another name or
+  // you have to refer to this value `window.import`
+  Object.defineProperty(window, 'import', {
+    enumerable: true,
+    configurable: true,
+    get: function() {
+      return document.currentScript.ownerDocument;
+    }
+  });
+  
+  // copy own properties from 'api' to 'prototype, with name hinting for 'super'
+  function extend(prototype, api) {
+    if (prototype && api) {
+      // use only own properties of 'api'
+      Object.getOwnPropertyNames(api).forEach(function(n) {
+        // acquire property descriptor
+        var pd = Object.getOwnPropertyDescriptor(api, n);
+        if (pd) {
+          // clone property via descriptor
+          Object.defineProperty(prototype, n, pd);
+        }
+      });
+    }
+    return prototype;
+  };
+
+  Event.prototype.keys = {
+    ESC_KEY: 27,
+    ENTER_KEY: 13
+  };
+  
+  Base = {
+
+    // (semi-)pluggable features for Base
+    _features: [],
+
+    addFeature: function(feature) {
+      this._features.push(feature);
+      extend(Base, feature);
+      delete Base.init;
+      delete Base.register;
+    },
+
+    registerCallback: function() {
+      // `this` context is a prototype, not an instance
+      var prototype = this;
+      prototype._template = 
+        document.currentScript.ownerDocument.querySelector('template');
+      this.registerFeatures(prototype);
+      this.registered(prototype);
+    },
+
+    registered: function(prototype) {
+      // for overriding
+    },
+
+    registerFeatures: function(prototype) {
+      Base._features.forEach(function(f) {
+        f.register && f.register(prototype);
+      }, this);
+    },
+
+    createdCallback: function() {
+      this.root = this;
+      this.beforeCreated();
+      this.created();
+      this.afterCreated();
+    },
+
+    beforeCreated: function() {
+      this.initFeatures();
+    },
+
+    initFeatures: function() {
+      Base._features.forEach(function(f) {
+        f.init && f.init.call(this);
+      }, this);
+    },
+
+    created: function() {
+      // for overriding
+    },
+
+    afterCreated: function() {
+      // for overriding
+    }
+
+  };
+
+  Base.__proto__ = HTMLElement.prototype;
+  
+  var Polymer = function(prototype) {
+    prototype.__proto__ = Base;
+    prototype.registerCallback();
+    document.registerElement(prototype.name, {prototype: prototype});
+  };
+
+  Polymer.log = {
+  };
+
+  Base.addFeature({
+    createShadow: function(template) {
+      this.root = this.createShadowRoot();
+    }
+  });
+  
+  Base.addFeature({
+    register: function(prototype) {
+      var prev = document.currentScript.previousElementSibling;
+      if (prev && prev.localName === 'template') {
+        prototype._template = prev;
+      }
+    },
+    stampTemplate: function(template) {
+      this._stampTemplate(template || this._template, this.root);
+    },
+    _stampTemplate: function(template, target) {
+      target.appendChild(this.instanceTemplate(template));
+    },
+    instanceTemplate: function(template) {
+      return document.importNode(template.content, true);
+    }
+  });
+  
+  Base.addFeature({
+    $$: function(slctr) {
+      return this.root.querySelector(slctr);
+    },
+    marshalNodeReferences: function() {
+      // populate $ with id->node properties from the this.root subtree
+      this.$ = {};
+      var n$ = this.root.querySelectorAll("[id]");
+      for (var i=0, n; (n=n$[i]); i++) {
+        this.$[n.id] = n;
+      }
+    }
+  });
+
+  Base.addFeature({
+    listeners: {},
+    init: function() {
+    },
+    // TODO(sjmiles): support for '.' notation requires 'nodes' feature
+    listenListeners: function() {
+      for (var key in this.listeners) {
+        var node = this, name = key;
+        if (name.indexOf('.') >= 0) {
+          name = name.split('.');
+          node = this.$[name[0]];
+          name = name[1];
+        }
+        this.listen(node, name, this.listeners[key]);
+      }
+    },
+    listen: function(node, eventName, methodName) {
+      node.addEventListener(eventName, function(e) {
+        this[methodName](e, e.detail);
+      }.bind(this));
+    },
+    fire: function(type, detail, onNode, bubbles, cancelable) {
+      var node = onNode || this;
+      var detail = (detail === null || detail === undefined) ? {} : detail;
+      var event = new CustomEvent(type, {
+        bubbles: bubbles !== undefined ? bubbles : true,
+        cancelable: cancelable !== undefined ? cancelable : true,
+        detail: detail
+      });
+      node.dispatchEvent(event);
+      return event;
+    }
+  });
+  
+  Base.addFeature({
+    keyPresses: {},
+    listenKeyPresses: function() {
+      // for..in here to gate empty keyPresses object (iterates once or never)
+      for (var n in this.keyPresses) {
+        // only get here if there is something in keyPresses
+        this.addEventListener('keypress', this.keyPressesFeatureHandler);
+        // map string keys to numeric codes
+        for (n in this.keyPresses) {
+          if (typeof n === 'string') {
+            this.keyPresses[Event.prototype.keys[n]] = this.keyPresses[n];
+          }
+        }
+        break;
+      }
+    },
+    keyPressesFeatureHandler: function(e) {
+      var method = this.keyPresses[e.keyCode];
+      if (method && this[method]) {
+        return this[method](e.keyCode, e);
+      }
+    }
+  });
+  
+  Base.addFeature({
+
+    init: function() {
+      this.features();
+    },
+
+    features: function() {
+      if (this._template) {
+        this.createShadow();
+        this.stampTemplate();
+        this.marshalNodeReferences();
+      }
+      this.listenListeners();
+      this.listenKeyPresses();
+    }
+
+  });
+ 
+</script>

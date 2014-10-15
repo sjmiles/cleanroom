@@ -1,0 +1,10 @@
+[
+  "../WeakMap/WeakMap.js",
+  "../MutationObservers/MutationObserver.js",
+  "src/scope.js",
+  "src/Loader.js",
+  "src/Parser.js",
+  "src/HTMLImports.js",
+  "src/Observer.js",
+  "src/boot.js"
+]

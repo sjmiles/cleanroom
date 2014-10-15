@@ -1,0 +1,69 @@
+<link rel="import" href="paper-ripple.html">
+
+<template>
+
+  <style>
+    :host {
+      /* layout */
+      display: inline-block;
+      position: relative;
+      /* box */
+      min-width: 5.14em;
+      margin: 0 0.29em;
+      border-radius: 3px;
+      /* text */
+      font: inherit;
+      text-transform: uppercase;
+      xtext-align: center;
+      /* decoration */
+      xbackground: #dfdfdf;
+      outline: none;
+      /* behavior */
+      -webkit-user-select: none;
+      user-select: none;
+      cursor: pointer;
+    }
+    
+    :host(.hover:hover) {
+      background: #d6d6d6;
+    }
+    
+    :host([disabled]) {
+      background: #eaeaea !important;
+      color: #a8a8a8 !important;
+      cursor: auto;
+    }
+    
+    paper-ripple {
+      padding: 0.7em 0.57em;
+    }
+  </style>
+
+  <paper-ripple horizontal center-center layout>
+    <content></content>
+  </paper-ripple>
+  
+</template>
+<script>
+
+  Polymer({
+    name: 'paper-button',
+    
+    listeners: {
+      click: 'clickHandler'
+    },
+    
+    created: function() {
+      this.lightFeatures();
+    },
+    
+    clickHandler: function(e) {
+      e.stopPropagation();
+      setTimeout(function() {
+        this.fire('click', null, this.parentNode);
+      }.bind(this), 100);
+    }
+    
+  });
+  
+</script>

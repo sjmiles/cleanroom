@@ -1,1 +1,3 @@
 node_modules
+/skunkwerk/generation-3/polymer-6/docs/*.~vsdx
+*.~vsdx

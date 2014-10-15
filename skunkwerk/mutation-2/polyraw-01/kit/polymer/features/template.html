@@ -1,0 +1,21 @@
+<script>
+
+  Base.addFeature({
+    register: function(prototype) {
+      var prev = document.currentScript.previousElementSibling;
+      if (prev && prev.localName === 'template') {
+        prototype._template = prev;
+      }
+    },
+    stampTemplate: function(template) {
+      this._stampTemplate(template || this._template, this.root);
+    },
+    _stampTemplate: function(template, target) {
+      target.appendChild(this.instanceTemplate(template));
+    },
+    instanceTemplate: function(template) {
+      return document.importNode(template.content, true);
+    }
+  });
+  
+</script>

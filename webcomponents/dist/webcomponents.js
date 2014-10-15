@@ -1,3 +1,186 @@
+if (typeof WeakMap === "undefined") {
+    (function() {
+        var defineProperty = Object.defineProperty;
+        var counter = Date.now() % 1e9;
+        var WeakMap = function() {
+            this.name = "__st" + (Math.random() * 1e9 >>> 0) + (counter++ + "__");
+        };
+        WeakMap.prototype = {
+            set: function(key, value) {
+                var entry = key[this.name];
+                if (entry && entry[0] === key) entry[1] = value; else defineProperty(key, this.name, {
+                    value: [ key, value ],
+                    writable: true
+                });
+            },
+            get: function(key) {
+                var entry;
+                return (entry = key[this.name]) && entry[0] === key ? entry[1] : undefined;
+            },
+            "delete": function(key) {
+                this.set(key, undefined);
+            }
+        };
+        window.WeakMap = WeakMap;
+    })();
+}
+
+(function(scope) {
+    function newSplice(index, removed, addedCount) {
+        return {
+            index: index,
+            removed: removed,
+            addedCount: addedCount
+        };
+    }
+    var EDIT_LEAVE = 0;
+    var EDIT_UPDATE = 1;
+    var EDIT_ADD = 2;
+    var EDIT_DELETE = 3;
+    function ArraySplice() {}
+    ArraySplice.prototype = {
+        calcEditDistances: function(current, currentStart, currentEnd, old, oldStart, oldEnd) {
+            var rowCount = oldEnd - oldStart + 1;
+            var columnCount = currentEnd - currentStart + 1;
+            var distances = new Array(rowCount);
+            for (var i = 0; i < rowCount; i++) {
+                distances[i] = new Array(columnCount);
+                distances[i][0] = i;
+            }
+            for (var j = 0; j < columnCount; j++) distances[0][j] = j;
+            for (var i = 1; i < rowCount; i++) {
+                for (var j = 1; j < columnCount; j++) {
+                    if (this.equals(current[currentStart + j - 1], old[oldStart + i - 1])) distances[i][j] = distances[i - 1][j - 1]; else {
+                        var north = distances[i - 1][j] + 1;
+                        var west = distances[i][j - 1] + 1;
+                        distances[i][j] = north < west ? north : west;
+                    }
+                }
+            }
+            return distances;
+        },
+        spliceOperationsFromEditDistances: function(distances) {
+            var i = distances.length - 1;
+            var j = distances[0].length - 1;
+            var current = distances[i][j];
+            var edits = [];
+            while (i > 0 || j > 0) {
+                if (i == 0) {
+                    edits.push(EDIT_ADD);
+                    j--;
+                    continue;
+                }
+                if (j == 0) {
+                    edits.push(EDIT_DELETE);
+                    i--;
+                    continue;
+                }
+                var northWest = distances[i - 1][j - 1];
+                var west = distances[i - 1][j];
+                var north = distances[i][j - 1];
+                var min;
+                if (west < north) min = west < northWest ? west : northWest; else min = north < northWest ? north : northWest;
+                if (min == northWest) {
+                    if (northWest == current) {
+                        edits.push(EDIT_LEAVE);
+                    } else {
+                        edits.push(EDIT_UPDATE);
+                        current = northWest;
+                    }
+                    i--;
+                    j--;
+                } else if (min == west) {
+                    edits.push(EDIT_DELETE);
+                    i--;
+                    current = west;
+                } else {
+                    edits.push(EDIT_ADD);
+                    j--;
+                    current = north;
+                }
+            }
+            edits.reverse();
+            return edits;
+        },
+        calcSplices: function(current, currentStart, currentEnd, old, oldStart, oldEnd) {
+            var prefixCount = 0;
+            var suffixCount = 0;
+            var minLength = Math.min(currentEnd - currentStart, oldEnd - oldStart);
+            if (currentStart == 0 && oldStart == 0) prefixCount = this.sharedPrefix(current, old, minLength);
+            if (currentEnd == current.length && oldEnd == old.length) suffixCount = this.sharedSuffix(current, old, minLength - prefixCount);
+            currentStart += prefixCount;
+            oldStart += prefixCount;
+            currentEnd -= suffixCount;
+            oldEnd -= suffixCount;
+            if (currentEnd - currentStart == 0 && oldEnd - oldStart == 0) return [];
+            if (currentStart == currentEnd) {
+                var splice = newSplice(currentStart, [], 0);
+                while (oldStart < oldEnd) splice.removed.push(old[oldStart++]);
+                return [ splice ];
+            } else if (oldStart == oldEnd) return [ newSplice(currentStart, [], currentEnd - currentStart) ];
+            var ops = this.spliceOperationsFromEditDistances(this.calcEditDistances(current, currentStart, currentEnd, old, oldStart, oldEnd));
+            var splice = undefined;
+            var splices = [];
+            var index = currentStart;
+            var oldIndex = oldStart;
+            for (var i = 0; i < ops.length; i++) {
+                switch (ops[i]) {
+                  case EDIT_LEAVE:
+                    if (splice) {
+                        splices.push(splice);
+                        splice = undefined;
+                    }
+                    index++;
+                    oldIndex++;
+                    break;
+
+                  case EDIT_UPDATE:
+                    if (!splice) splice = newSplice(index, [], 0);
+                    splice.addedCount++;
+                    index++;
+                    splice.removed.push(old[oldIndex]);
+                    oldIndex++;
+                    break;
+
+                  case EDIT_ADD:
+                    if (!splice) splice = newSplice(index, [], 0);
+                    splice.addedCount++;
+                    index++;
+                    break;
+
+                  case EDIT_DELETE:
+                    if (!splice) splice = newSplice(index, [], 0);
+                    splice.removed.push(old[oldIndex]);
+                    oldIndex++;
+                    break;
+                }
+            }
+            if (splice) {
+                splices.push(splice);
+            }
+            return splices;
+        },
+        sharedPrefix: function(current, old, searchLength) {
+            for (var i = 0; i < searchLength; i++) if (!this.equals(current[i], old[i])) return i;
+            return searchLength;
+        },
+        sharedSuffix: function(current, old, searchLength) {
+            var index1 = current.length;
+            var index2 = old.length;
+            var count = 0;
+            while (count < searchLength && this.equals(current[--index1], old[--index2])) count++;
+            return count;
+        },
+        calculateSplices: function(current, previous) {
+            return this.calcSplices(current, 0, current.length, previous, 0, previous.length);
+        },
+        equals: function(currentValue, previousValue) {
+            return currentValue === previousValue;
+        }
+    };
+    scope.ArraySplice = ArraySplice;
+})(window);
+
 window.ShadowDOMPolyfill = {};
 
 (function(scope) {
@@ -3802,236 +3985,305 @@ window.ShadowDOMPolyfill = {};
     });
 })(window.ShadowDOMPolyfill);
 
-(function() {
-    if (typeof window.CustomEvent !== "function") {
-        window.CustomEvent = function(inType, dictionary) {
-            var e = document.createEvent("HTMLEvents");
-            e.initEvent(inType, dictionary.bubbles === false ? false : true, dictionary.cancelable === false ? false : true, dictionary.detail);
-            return e;
-        };
-    }
-    var doc = window.ShadowDOMPolyfill ? window.ShadowDOMPolyfill.wrapIfNeeded(document) : document;
-    HTMLImports.whenImportsReady(function() {
-        HTMLImports.ready = true;
-        HTMLImports.readyTime = new Date().getTime();
-        doc.dispatchEvent(new CustomEvent("HTMLImportsLoaded", {
-            bubbles: true
-        }));
-    });
-    if (!HTMLImports.useNative) {
-        function bootstrap() {
-            HTMLImports.importer.bootDocument(doc);
-        }
-        if (document.readyState === "complete" || document.readyState === "interactive" && !window.attachEvent) {
-            bootstrap();
-        } else {
-            document.addEventListener("DOMContentLoaded", bootstrap);
-        }
-    }
-})();
-
-(function(scope) {
-    var hasNative = "import" in document.createElement("link");
-    var useNative = hasNative;
-    var flags = scope.flags;
-    var IMPORT_LINK_TYPE = "import";
-    var mainDoc = window.ShadowDOMPolyfill ? ShadowDOMPolyfill.wrapIfNeeded(document) : document;
-    if (!useNative) {
-        var xhr = scope.xhr;
-        var Loader = scope.Loader;
-        var parser = scope.parser;
-        var importer = {
-            documents: {},
-            documentPreloadSelectors: "link[rel=" + IMPORT_LINK_TYPE + "]",
-            importsPreloadSelectors: [ "link[rel=" + IMPORT_LINK_TYPE + "]" ].join(","),
-            loadNode: function(node) {
-                importLoader.addNode(node);
-            },
-            loadSubtree: function(parent) {
-                var nodes = this.marshalNodes(parent);
-                importLoader.addNodes(nodes);
-            },
-            marshalNodes: function(parent) {
-                return parent.querySelectorAll(this.loadSelectorsForNode(parent));
-            },
-            loadSelectorsForNode: function(node) {
-                var doc = node.ownerDocument || node;
-                return doc === mainDoc ? this.documentPreloadSelectors : this.importsPreloadSelectors;
-            },
-            loaded: function(url, elt, resource) {
-                flags.load && console.log("loaded", url, elt);
-                elt.__resource = resource;
-                if (isDocumentLink(elt)) {
-                    var doc = this.documents[url];
-                    if (!doc) {
-                        doc = makeDocument(resource, url);
-                        doc.__importLink = elt;
-                        this.bootDocument(doc);
-                        this.documents[url] = doc;
-                    }
-                    elt.import = doc;
-                }
-                parser.parseNext();
-            },
-            bootDocument: function(doc) {
-                this.loadSubtree(doc);
-                this.observe(doc);
-                parser.parseNext();
-            },
-            loadedAll: function() {
-                parser.parseNext();
-            }
-        };
-        var importLoader = new Loader(importer.loaded.bind(importer), importer.loadedAll.bind(importer));
-        function isDocumentLink(elt) {
-            return isLinkRel(elt, IMPORT_LINK_TYPE);
-        }
-        function isLinkRel(elt, rel) {
-            return elt.localName === "link" && elt.getAttribute("rel") === rel;
-        }
-        function isScript(elt) {
-            return elt.localName === "script";
-        }
-        function makeDocument(resource, url) {
-            var doc = resource;
-            if (!(doc instanceof Document)) {
-                doc = document.implementation.createHTMLDocument(IMPORT_LINK_TYPE);
-            }
-            doc._URL = url;
-            var base = doc.createElement("base");
-            base.setAttribute("href", url);
-            if (!doc.baseURI) {
-                doc.baseURI = url;
-            }
-            var meta = doc.createElement("meta");
-            meta.setAttribute("charset", "utf-8");
-            doc.head.appendChild(meta);
-            doc.head.appendChild(base);
-            if (!(resource instanceof Document)) {
-                doc.body.innerHTML = resource;
-            }
-            if (window.HTMLTemplateElement && HTMLTemplateElement.bootstrap) {
-                HTMLTemplateElement.bootstrap(doc);
-            }
-            return doc;
-        }
-    } else {
-        var importer = {};
-    }
-    var currentScriptDescriptor = {
-        get: function() {
-            return HTMLImports.currentScript || document.currentScript;
-        },
-        configurable: true
-    };
-    Object.defineProperty(document, "_currentScript", currentScriptDescriptor);
-    Object.defineProperty(mainDoc, "_currentScript", currentScriptDescriptor);
-    if (!document.baseURI) {
-        var baseURIDescriptor = {
-            get: function() {
-                return window.location.href;
-            },
-            configurable: true
-        };
-        Object.defineProperty(document, "baseURI", baseURIDescriptor);
-        Object.defineProperty(mainDoc, "baseURI", baseURIDescriptor);
-    }
-    function whenImportsReady(callback, doc) {
-        doc = doc || mainDoc;
-        whenDocumentReady(function() {
-            watchImportsLoad(callback, doc);
-        }, doc);
-    }
-    var requiredReadyState = HTMLImports.isIE ? "complete" : "interactive";
-    var READY_EVENT = "readystatechange";
-    function isDocumentReady(doc) {
-        return doc.readyState === "complete" || doc.readyState === requiredReadyState;
-    }
-    function whenDocumentReady(callback, doc) {
-        if (!isDocumentReady(doc)) {
-            var checkReady = function() {
-                if (doc.readyState === "complete" || doc.readyState === requiredReadyState) {
-                    doc.removeEventListener(READY_EVENT, checkReady);
-                    whenDocumentReady(callback, doc);
-                }
-            };
-            doc.addEventListener(READY_EVENT, checkReady);
-        } else if (callback) {
-            callback();
-        }
-    }
-    function watchImportsLoad(callback, doc) {
-        var imports = doc.querySelectorAll("link[rel=import]");
-        var loaded = 0, l = imports.length;
-        function checkDone(d) {
-            if (loaded == l) {
-                callback && callback();
-            }
-        }
-        function loadedImport(e) {
-            loaded++;
-            checkDone();
-        }
-        if (l) {
-            for (var i = 0, imp; i < l && (imp = imports[i]); i++) {
-                if (isImportLoaded(imp)) {
-                    loadedImport.call(imp);
-                } else {
-                    imp.addEventListener("load", loadedImport);
-                    imp.addEventListener("error", loadedImport);
-                }
-            }
-        } else {
-            checkDone();
-        }
-    }
-    function isImportLoaded(link) {
-        return useNative ? link.import && link.import.readyState !== "loading" || link.__loaded : link.__importParsed;
-    }
-    if (useNative) {
-        new MutationObserver(function(mxns) {
-            for (var i = 0, l = mxns.length, m; i < l && (m = mxns[i]); i++) {
-                if (m.addedNodes) {
-                    handleImports(m.addedNodes);
-                }
-            }
-        }).observe(document.head, {
-            childList: true
-        });
-        function handleImports(nodes) {
-            for (var i = 0, l = nodes.length, n; i < l && (n = nodes[i]); i++) {
-                if (isImport(n)) {
-                    handleImport(n);
-                }
-            }
-        }
-        function isImport(element) {
-            return element.localName === "link" && element.rel === "import";
-        }
-        function handleImport(element) {
-            var loaded = element.import;
-            if (loaded) {
-                markTargetLoaded({
-                    target: element
+(function(global) {
+    var registrationsTable = new WeakMap();
+    var setImmediate = window.msSetImmediate;
+    if (!setImmediate) {
+        var setImmediateQueue = [];
+        var sentinel = String(Math.random());
+        window.addEventListener("message", function(e) {
+            if (e.data === sentinel) {
+                var queue = setImmediateQueue;
+                setImmediateQueue = [];
+                queue.forEach(function(func) {
+                    func();
                 });
-            } else {
-                element.addEventListener("load", markTargetLoaded);
-                element.addEventListener("error", markTargetLoaded);
             }
-        }
-        function markTargetLoaded(event) {
-            event.target.__loaded = true;
+        });
+        setImmediate = function(func) {
+            setImmediateQueue.push(func);
+            window.postMessage(sentinel, "*");
+        };
+    }
+    var isScheduled = false;
+    var scheduledObservers = [];
+    function scheduleCallback(observer) {
+        scheduledObservers.push(observer);
+        if (!isScheduled) {
+            isScheduled = true;
+            setImmediate(dispatchCallbacks);
         }
     }
-    scope.IMPORT_LINK_TYPE = IMPORT_LINK_TYPE;
-    scope.isImportLoaded = isImportLoaded;
-    scope.importLoader = importLoader;
-    scope.importer = importer;
-    scope.whenReady = whenImportsReady;
-    scope.hasNative = hasNative;
-    scope.useNative = useNative;
-    scope.whenImportsReady = whenImportsReady;
-})(window.HTMLImports);
+    function wrapIfNeeded(node) {
+        return window.ShadowDOMPolyfill && window.ShadowDOMPolyfill.wrapIfNeeded(node) || node;
+    }
+    function dispatchCallbacks() {
+        isScheduled = false;
+        var observers = scheduledObservers;
+        scheduledObservers = [];
+        observers.sort(function(o1, o2) {
+            return o1.uid_ - o2.uid_;
+        });
+        var anyNonEmpty = false;
+        observers.forEach(function(observer) {
+            var queue = observer.takeRecords();
+            removeTransientObserversFor(observer);
+            if (queue.length) {
+                observer.callback_(queue, observer);
+                anyNonEmpty = true;
+            }
+        });
+        if (anyNonEmpty) dispatchCallbacks();
+    }
+    function removeTransientObserversFor(observer) {
+        observer.nodes_.forEach(function(node) {
+            var registrations = registrationsTable.get(node);
+            if (!registrations) return;
+            registrations.forEach(function(registration) {
+                if (registration.observer === observer) registration.removeTransientObservers();
+            });
+        });
+    }
+    function forEachAncestorAndObserverEnqueueRecord(target, callback) {
+        for (var node = target; node; node = node.parentNode) {
+            var registrations = registrationsTable.get(node);
+            if (registrations) {
+                for (var j = 0; j < registrations.length; j++) {
+                    var registration = registrations[j];
+                    var options = registration.options;
+                    if (node !== target && !options.subtree) continue;
+                    var record = callback(options);
+                    if (record) registration.enqueue(record);
+                }
+            }
+        }
+    }
+    var uidCounter = 0;
+    function JsMutationObserver(callback) {
+        this.callback_ = callback;
+        this.nodes_ = [];
+        this.records_ = [];
+        this.uid_ = ++uidCounter;
+    }
+    JsMutationObserver.prototype = {
+        observe: function(target, options) {
+            target = wrapIfNeeded(target);
+            if (!options.childList && !options.attributes && !options.characterData || options.attributeOldValue && !options.attributes || options.attributeFilter && options.attributeFilter.length && !options.attributes || options.characterDataOldValue && !options.characterData) {
+                throw new SyntaxError();
+            }
+            var registrations = registrationsTable.get(target);
+            if (!registrations) registrationsTable.set(target, registrations = []);
+            var registration;
+            for (var i = 0; i < registrations.length; i++) {
+                if (registrations[i].observer === this) {
+                    registration = registrations[i];
+                    registration.removeListeners();
+                    registration.options = options;
+                    break;
+                }
+            }
+            if (!registration) {
+                registration = new Registration(this, target, options);
+                registrations.push(registration);
+                this.nodes_.push(target);
+            }
+            registration.addListeners();
+        },
+        disconnect: function() {
+            this.nodes_.forEach(function(node) {
+                var registrations = registrationsTable.get(node);
+                for (var i = 0; i < registrations.length; i++) {
+                    var registration = registrations[i];
+                    if (registration.observer === this) {
+                        registration.removeListeners();
+                        registrations.splice(i, 1);
+                        break;
+                    }
+                }
+            }, this);
+            this.records_ = [];
+        },
+        takeRecords: function() {
+            var copyOfRecords = this.records_;
+            this.records_ = [];
+            return copyOfRecords;
+        }
+    };
+    function MutationRecord(type, target) {
+        this.type = type;
+        this.target = target;
+        this.addedNodes = [];
+        this.removedNodes = [];
+        this.previousSibling = null;
+        this.nextSibling = null;
+        this.attributeName = null;
+        this.attributeNamespace = null;
+        this.oldValue = null;
+    }
+    function copyMutationRecord(original) {
+        var record = new MutationRecord(original.type, original.target);
+        record.addedNodes = original.addedNodes.slice();
+        record.removedNodes = original.removedNodes.slice();
+        record.previousSibling = original.previousSibling;
+        record.nextSibling = original.nextSibling;
+        record.attributeName = original.attributeName;
+        record.attributeNamespace = original.attributeNamespace;
+        record.oldValue = original.oldValue;
+        return record;
+    }
+    var currentRecord, recordWithOldValue;
+    function getRecord(type, target) {
+        return currentRecord = new MutationRecord(type, target);
+    }
+    function getRecordWithOldValue(oldValue) {
+        if (recordWithOldValue) return recordWithOldValue;
+        recordWithOldValue = copyMutationRecord(currentRecord);
+        recordWithOldValue.oldValue = oldValue;
+        return recordWithOldValue;
+    }
+    function clearRecords() {
+        currentRecord = recordWithOldValue = undefined;
+    }
+    function recordRepresentsCurrentMutation(record) {
+        return record === recordWithOldValue || record === currentRecord;
+    }
+    function selectRecord(lastRecord, newRecord) {
+        if (lastRecord === newRecord) return lastRecord;
+        if (recordWithOldValue && recordRepresentsCurrentMutation(lastRecord)) return recordWithOldValue;
+        return null;
+    }
+    function Registration(observer, target, options) {
+        this.observer = observer;
+        this.target = target;
+        this.options = options;
+        this.transientObservedNodes = [];
+    }
+    Registration.prototype = {
+        enqueue: function(record) {
+            var records = this.observer.records_;
+            var length = records.length;
+            if (records.length > 0) {
+                var lastRecord = records[length - 1];
+                var recordToReplaceLast = selectRecord(lastRecord, record);
+                if (recordToReplaceLast) {
+                    records[length - 1] = recordToReplaceLast;
+                    return;
+                }
+            } else {
+                scheduleCallback(this.observer);
+            }
+            records[length] = record;
+        },
+        addListeners: function() {
+            this.addListeners_(this.target);
+        },
+        addListeners_: function(node) {
+            var options = this.options;
+            if (options.attributes) node.addEventListener("DOMAttrModified", this, true);
+            if (options.characterData) node.addEventListener("DOMCharacterDataModified", this, true);
+            if (options.childList) node.addEventListener("DOMNodeInserted", this, true);
+            if (options.childList || options.subtree) node.addEventListener("DOMNodeRemoved", this, true);
+        },
+        removeListeners: function() {
+            this.removeListeners_(this.target);
+        },
+        removeListeners_: function(node) {
+            var options = this.options;
+            if (options.attributes) node.removeEventListener("DOMAttrModified", this, true);
+            if (options.characterData) node.removeEventListener("DOMCharacterDataModified", this, true);
+            if (options.childList) node.removeEventListener("DOMNodeInserted", this, true);
+            if (options.childList || options.subtree) node.removeEventListener("DOMNodeRemoved", this, true);
+        },
+        addTransientObserver: function(node) {
+            if (node === this.target) return;
+            this.addListeners_(node);
+            this.transientObservedNodes.push(node);
+            var registrations = registrationsTable.get(node);
+            if (!registrations) registrationsTable.set(node, registrations = []);
+            registrations.push(this);
+        },
+        removeTransientObservers: function() {
+            var transientObservedNodes = this.transientObservedNodes;
+            this.transientObservedNodes = [];
+            transientObservedNodes.forEach(function(node) {
+                this.removeListeners_(node);
+                var registrations = registrationsTable.get(node);
+                for (var i = 0; i < registrations.length; i++) {
+                    if (registrations[i] === this) {
+                        registrations.splice(i, 1);
+                        break;
+                    }
+                }
+            }, this);
+        },
+        handleEvent: function(e) {
+            e.stopImmediatePropagation();
+            switch (e.type) {
+              case "DOMAttrModified":
+                var name = e.attrName;
+                var namespace = e.relatedNode.namespaceURI;
+                var target = e.target;
+                var record = new getRecord("attributes", target);
+                record.attributeName = name;
+                record.attributeNamespace = namespace;
+                var oldValue = e.attrChange === MutationEvent.ADDITION ? null : e.prevValue;
+                forEachAncestorAndObserverEnqueueRecord(target, function(options) {
+                    if (!options.attributes) return;
+                    if (options.attributeFilter && options.attributeFilter.length && options.attributeFilter.indexOf(name) === -1 && options.attributeFilter.indexOf(namespace) === -1) {
+                        return;
+                    }
+                    if (options.attributeOldValue) return getRecordWithOldValue(oldValue);
+                    return record;
+                });
+                break;
+
+              case "DOMCharacterDataModified":
+                var target = e.target;
+                var record = getRecord("characterData", target);
+                var oldValue = e.prevValue;
+                forEachAncestorAndObserverEnqueueRecord(target, function(options) {
+                    if (!options.characterData) return;
+                    if (options.characterDataOldValue) return getRecordWithOldValue(oldValue);
+                    return record;
+                });
+                break;
+
+              case "DOMNodeRemoved":
+                this.addTransientObserver(e.target);
+
+              case "DOMNodeInserted":
+                var target = e.relatedNode;
+                var changedNode = e.target;
+                var addedNodes, removedNodes;
+                if (e.type === "DOMNodeInserted") {
+                    addedNodes = [ changedNode ];
+                    removedNodes = [];
+                } else {
+                    addedNodes = [];
+                    removedNodes = [ changedNode ];
+                }
+                var previousSibling = changedNode.previousSibling;
+                var nextSibling = changedNode.nextSibling;
+                var record = getRecord("childList", target);
+                record.addedNodes = addedNodes;
+                record.removedNodes = removedNodes;
+                record.previousSibling = previousSibling;
+                record.nextSibling = nextSibling;
+                forEachAncestorAndObserverEnqueueRecord(target, function(options) {
+                    if (!options.childList) return;
+                    return record;
+                });
+            }
+            clearRecords();
+        }
+    };
+    global.JsMutationObserver = JsMutationObserver;
+    if (!global.MutationObserver) global.MutationObserver = JsMutationObserver;
+})(this);
+
+window.HTMLImports = window.HTMLImports || {
+    flags: {}
+};
 
 (function(scope) {
     var path = scope.path;
@@ -4156,45 +4408,6 @@ window.ShadowDOMPolyfill = {};
     scope.xhr = xhr;
     scope.Loader = Loader;
 })(window.HTMLImports);
-
-(function(scope) {
-    var IMPORT_LINK_TYPE = scope.IMPORT_LINK_TYPE;
-    var importSelector = "link[rel=" + IMPORT_LINK_TYPE + "]";
-    var importer = scope.importer;
-    var parser = scope.parser;
-    function handler(mutations) {
-        for (var i = 0, l = mutations.length, m; i < l && (m = mutations[i]); i++) {
-            if (m.type === "childList" && m.addedNodes.length) {
-                addedNodes(m.addedNodes);
-            }
-        }
-    }
-    function addedNodes(nodes) {
-        var owner;
-        for (var i = 0, l = nodes.length, n; i < l && (n = nodes[i]); i++) {
-            owner = owner || n.ownerDocument;
-            if (shouldLoadNode(n)) {
-                importer.loadNode(n);
-            }
-            if (n.children && n.children.length) {
-                addedNodes(n.children);
-            }
-        }
-    }
-    function shouldLoadNode(node) {
-        return node.nodeType === 1 && matches.call(node, importer.loadSelectorsForNode(node));
-    }
-    var matches = HTMLElement.prototype.matches || HTMLElement.prototype.matchesSelector || HTMLElement.prototype.webkitMatchesSelector || HTMLElement.prototype.mozMatchesSelector || HTMLElement.prototype.msMatchesSelector;
-    var observer = new MutationObserver(handler);
-    function observe(root) {
-        observer.observe(root, {
-            childList: true,
-            subtree: true
-        });
-    }
-    scope.observe = observe;
-    importer.observe = observe;
-})(HTMLImports);
 
 (function(scope) {
     var IMPORT_LINK_TYPE = "import";
@@ -4433,598 +4646,272 @@ window.ShadowDOMPolyfill = {};
     scope.isIE = isIe;
 })(HTMLImports);
 
-window.HTMLImports = window.HTMLImports || {
-    flags: {}
-};
-
 (function(scope) {
-    function bootstrap() {
-        CustomElements.parser.parse(document);
-        CustomElements.upgradeDocument(document);
-        var async = window.Platform && Platform.endOfMicrotask ? Platform.endOfMicrotask : setTimeout;
-        async(function() {
-            CustomElements.ready = true;
-            CustomElements.readyTime = Date.now();
-            if (window.HTMLImports) {
-                CustomElements.elapsed = CustomElements.readyTime - HTMLImports.readyTime;
-            }
-            document.dispatchEvent(new CustomEvent("WebComponentsReady", {
-                bubbles: true
-            }));
-            if (window.HTMLImports) {
-                HTMLImports.__importsParsingHook = function(elt) {
-                    CustomElements.parser.parse(elt.import);
-                };
-            }
-        });
-    }
-    if (typeof window.CustomEvent !== "function") {
-        window.CustomEvent = function(inType) {
-            var e = document.createEvent("HTMLEvents");
-            e.initEvent(inType, true, true);
-            return e;
-        };
-    }
-    if (document.readyState === "complete" || scope.flags.eager) {
-        bootstrap();
-    } else if (document.readyState === "interactive" && !window.attachEvent && (!window.HTMLImports || window.HTMLImports.ready)) {
-        bootstrap();
-    } else {
-        var loadEvent = window.HTMLImports && !HTMLImports.ready ? "HTMLImportsLoaded" : "DOMContentLoaded";
-        window.addEventListener(loadEvent, bootstrap);
-    }
-})(window.CustomElements);
-
-(function(scope) {
-    if (!scope) {
-        scope = window.CustomElements = {
-            flags: {}
-        };
-    }
+    var hasNative = "import" in document.createElement("link");
+    var useNative = hasNative;
     var flags = scope.flags;
-    var hasNative = Boolean(document.registerElement);
-    var useNative = !flags.register && hasNative && !window.ShadowDOMPolyfill && (!window.HTMLImports || HTMLImports.useNative);
+    var IMPORT_LINK_TYPE = "import";
+    var mainDoc = window.ShadowDOMPolyfill ? ShadowDOMPolyfill.wrapIfNeeded(document) : document;
+    if (!useNative) {
+        var xhr = scope.xhr;
+        var Loader = scope.Loader;
+        var parser = scope.parser;
+        var importer = {
+            documents: {},
+            documentPreloadSelectors: "link[rel=" + IMPORT_LINK_TYPE + "]",
+            importsPreloadSelectors: [ "link[rel=" + IMPORT_LINK_TYPE + "]" ].join(","),
+            loadNode: function(node) {
+                importLoader.addNode(node);
+            },
+            loadSubtree: function(parent) {
+                var nodes = this.marshalNodes(parent);
+                importLoader.addNodes(nodes);
+            },
+            marshalNodes: function(parent) {
+                return parent.querySelectorAll(this.loadSelectorsForNode(parent));
+            },
+            loadSelectorsForNode: function(node) {
+                var doc = node.ownerDocument || node;
+                return doc === mainDoc ? this.documentPreloadSelectors : this.importsPreloadSelectors;
+            },
+            loaded: function(url, elt, resource) {
+                flags.load && console.log("loaded", url, elt);
+                elt.__resource = resource;
+                if (isDocumentLink(elt)) {
+                    var doc = this.documents[url];
+                    if (!doc) {
+                        doc = makeDocument(resource, url);
+                        doc.__importLink = elt;
+                        this.bootDocument(doc);
+                        this.documents[url] = doc;
+                    }
+                    elt.import = doc;
+                }
+                parser.parseNext();
+            },
+            bootDocument: function(doc) {
+                this.loadSubtree(doc);
+                this.observe(doc);
+                parser.parseNext();
+            },
+            loadedAll: function() {
+                parser.parseNext();
+            }
+        };
+        var importLoader = new Loader(importer.loaded.bind(importer), importer.loadedAll.bind(importer));
+        function isDocumentLink(elt) {
+            return isLinkRel(elt, IMPORT_LINK_TYPE);
+        }
+        function isLinkRel(elt, rel) {
+            return elt.localName === "link" && elt.getAttribute("rel") === rel;
+        }
+        function isScript(elt) {
+            return elt.localName === "script";
+        }
+        function makeDocument(resource, url) {
+            var doc = resource;
+            if (!(doc instanceof Document)) {
+                doc = document.implementation.createHTMLDocument(IMPORT_LINK_TYPE);
+            }
+            doc._URL = url;
+            var base = doc.createElement("base");
+            base.setAttribute("href", url);
+            if (!doc.baseURI) {
+                doc.baseURI = url;
+            }
+            var meta = doc.createElement("meta");
+            meta.setAttribute("charset", "utf-8");
+            doc.head.appendChild(meta);
+            doc.head.appendChild(base);
+            if (!(resource instanceof Document)) {
+                doc.body.innerHTML = resource;
+            }
+            if (window.HTMLTemplateElement && HTMLTemplateElement.bootstrap) {
+                HTMLTemplateElement.bootstrap(doc);
+            }
+            return doc;
+        }
+    } else {
+        var importer = {};
+    }
+    var currentScriptDescriptor = {
+        get: function() {
+            return HTMLImports.currentScript || document.currentScript;
+        },
+        configurable: true
+    };
+    Object.defineProperty(document, "_currentScript", currentScriptDescriptor);
+    Object.defineProperty(mainDoc, "_currentScript", currentScriptDescriptor);
+    if (!document.baseURI) {
+        var baseURIDescriptor = {
+            get: function() {
+                return window.location.href;
+            },
+            configurable: true
+        };
+        Object.defineProperty(document, "baseURI", baseURIDescriptor);
+        Object.defineProperty(mainDoc, "baseURI", baseURIDescriptor);
+    }
+    function whenImportsReady(callback, doc) {
+        doc = doc || mainDoc;
+        whenDocumentReady(function() {
+            watchImportsLoad(callback, doc);
+        }, doc);
+    }
+    var requiredReadyState = HTMLImports.isIE ? "complete" : "interactive";
+    var READY_EVENT = "readystatechange";
+    function isDocumentReady(doc) {
+        return doc.readyState === "complete" || doc.readyState === requiredReadyState;
+    }
+    function whenDocumentReady(callback, doc) {
+        if (!isDocumentReady(doc)) {
+            var checkReady = function() {
+                if (doc.readyState === "complete" || doc.readyState === requiredReadyState) {
+                    doc.removeEventListener(READY_EVENT, checkReady);
+                    whenDocumentReady(callback, doc);
+                }
+            };
+            doc.addEventListener(READY_EVENT, checkReady);
+        } else if (callback) {
+            callback();
+        }
+    }
+    function watchImportsLoad(callback, doc) {
+        var imports = doc.querySelectorAll("link[rel=import]");
+        var loaded = 0, l = imports.length;
+        function checkDone(d) {
+            if (loaded == l) {
+                callback && callback();
+            }
+        }
+        function loadedImport(e) {
+            loaded++;
+            checkDone();
+        }
+        if (l) {
+            for (var i = 0, imp; i < l && (imp = imports[i]); i++) {
+                if (isImportLoaded(imp)) {
+                    loadedImport.call(imp);
+                } else {
+                    imp.addEventListener("load", loadedImport);
+                    imp.addEventListener("error", loadedImport);
+                }
+            }
+        } else {
+            checkDone();
+        }
+    }
+    function isImportLoaded(link) {
+        return useNative ? link.import && link.import.readyState !== "loading" || link.__loaded : link.__importParsed;
+    }
     if (useNative) {
-        var nop = function() {};
-        scope.registry = {};
-        scope.upgradeElement = nop;
-        scope.watchShadow = nop;
-        scope.upgrade = nop;
-        scope.upgradeAll = nop;
-        scope.upgradeSubtree = nop;
-        scope.observeDocument = nop;
-        scope.upgradeDocument = nop;
-        scope.upgradeDocumentTree = nop;
-        scope.takeRecords = nop;
-        scope.reservedTagList = [];
-    } else {
-        function register(name, options) {
-            var definition = options || {};
-            if (!name) {
-                throw new Error("document.registerElement: first argument `name` must not be empty");
+        new MutationObserver(function(mxns) {
+            for (var i = 0, l = mxns.length, m; i < l && (m = mxns[i]); i++) {
+                if (m.addedNodes) {
+                    handleImports(m.addedNodes);
+                }
             }
-            if (name.indexOf("-") < 0) {
-                throw new Error("document.registerElement: first argument ('name') must contain a dash ('-'). Argument provided was '" + String(name) + "'.");
-            }
-            if (isReservedTag(name)) {
-                throw new Error("Failed to execute 'registerElement' on 'Document': Registration failed for type '" + String(name) + "'. The type name is invalid.");
-            }
-            if (getRegisteredDefinition(name)) {
-                throw new Error("DuplicateDefinitionError: a type with name '" + String(name) + "' is already registered");
-            }
-            if (!definition.prototype) {
-                throw new Error("Options missing required prototype property");
-            }
-            definition.__name = name.toLowerCase();
-            definition.lifecycle = definition.lifecycle || {};
-            definition.ancestry = ancestry(definition.extends);
-            resolveTagName(definition);
-            resolvePrototypeChain(definition);
-            overrideAttributeApi(definition.prototype);
-            registerDefinition(definition.__name, definition);
-            definition.ctor = generateConstructor(definition);
-            definition.ctor.prototype = definition.prototype;
-            definition.prototype.constructor = definition.ctor;
-            if (scope.ready) {
-                scope.upgradeDocumentTree(document);
-            }
-            return definition.ctor;
-        }
-        function isReservedTag(name) {
-            for (var i = 0; i < reservedTagList.length; i++) {
-                if (name === reservedTagList[i]) {
-                    return true;
+        }).observe(document.head, {
+            childList: true
+        });
+        function handleImports(nodes) {
+            for (var i = 0, l = nodes.length, n; i < l && (n = nodes[i]); i++) {
+                if (isImport(n)) {
+                    handleImport(n);
                 }
             }
         }
-        var reservedTagList = [ "annotation-xml", "color-profile", "font-face", "font-face-src", "font-face-uri", "font-face-format", "font-face-name", "missing-glyph" ];
-        function ancestry(extnds) {
-            var extendee = getRegisteredDefinition(extnds);
-            if (extendee) {
-                return ancestry(extendee.extends).concat([ extendee ]);
-            }
-            return [];
+        function isImport(element) {
+            return element.localName === "link" && element.rel === "import";
         }
-        function resolveTagName(definition) {
-            var baseTag = definition.extends;
-            for (var i = 0, a; a = definition.ancestry[i]; i++) {
-                baseTag = a.is && a.tag;
-            }
-            definition.tag = baseTag || definition.__name;
-            if (baseTag) {
-                definition.is = definition.__name;
-            }
-        }
-        function resolvePrototypeChain(definition) {
-            if (!Object.__proto__) {
-                var nativePrototype = HTMLElement.prototype;
-                if (definition.is) {
-                    var inst = document.createElement(definition.tag);
-                    var expectedPrototype = Object.getPrototypeOf(inst);
-                    if (expectedPrototype === definition.prototype) {
-                        nativePrototype = expectedPrototype;
-                    }
-                }
-                var proto = definition.prototype, ancestor;
-                while (proto && proto !== nativePrototype) {
-                    ancestor = Object.getPrototypeOf(proto);
-                    proto.__proto__ = ancestor;
-                    proto = ancestor;
-                }
-                definition.native = nativePrototype;
-            }
-        }
-        function instantiate(definition) {
-            return upgrade(domCreateElement(definition.tag), definition);
-        }
-        function upgrade(element, definition) {
-            if (definition.is) {
-                element.setAttribute("is", definition.is);
-            }
-            element.removeAttribute("unresolved");
-            implement(element, definition);
-            element.__upgraded__ = true;
-            created(element);
-            scope.insertedNode(element);
-            scope.upgradeSubtree(element);
-            return element;
-        }
-        function implement(element, definition) {
-            if (Object.__proto__) {
-                element.__proto__ = definition.prototype;
+        function handleImport(element) {
+            var loaded = element.import;
+            if (loaded) {
+                markTargetLoaded({
+                    target: element
+                });
             } else {
-                customMixin(element, definition.prototype, definition.native);
-                element.__proto__ = definition.prototype;
+                element.addEventListener("load", markTargetLoaded);
+                element.addEventListener("error", markTargetLoaded);
             }
         }
-        function customMixin(inTarget, inSrc, inNative) {
-            var used = {};
-            var p = inSrc;
-            while (p !== inNative && p !== HTMLElement.prototype) {
-                var keys = Object.getOwnPropertyNames(p);
-                for (var i = 0, k; k = keys[i]; i++) {
-                    if (!used[k]) {
-                        Object.defineProperty(inTarget, k, Object.getOwnPropertyDescriptor(p, k));
-                        used[k] = 1;
-                    }
-                }
-                p = Object.getPrototypeOf(p);
-            }
+        function markTargetLoaded(event) {
+            event.target.__loaded = true;
         }
-        function created(element) {
-            if (element.createdCallback) {
-                element.createdCallback();
-            }
-        }
-        function overrideAttributeApi(prototype) {
-            if (prototype.setAttribute._polyfilled) {
-                return;
-            }
-            var setAttribute = prototype.setAttribute;
-            prototype.setAttribute = function(name, value) {
-                changeAttribute.call(this, name, value, setAttribute);
-            };
-            var removeAttribute = prototype.removeAttribute;
-            prototype.removeAttribute = function(name) {
-                changeAttribute.call(this, name, null, removeAttribute);
-            };
-            prototype.setAttribute._polyfilled = true;
-        }
-        function changeAttribute(name, value, operation) {
-            name = name.toLowerCase();
-            var oldValue = this.getAttribute(name);
-            operation.apply(this, arguments);
-            var newValue = this.getAttribute(name);
-            if (this.attributeChangedCallback && newValue !== oldValue) {
-                this.attributeChangedCallback(name, oldValue, newValue);
-            }
-        }
-        var registry = {};
-        function getRegisteredDefinition(name) {
-            if (name) {
-                return registry[name.toLowerCase()];
-            }
-        }
-        function registerDefinition(name, definition) {
-            registry[name] = definition;
-        }
-        function generateConstructor(definition) {
-            return function() {
-                return instantiate(definition);
-            };
-        }
-        var HTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
-        function createElementNS(namespace, tag, typeExtension) {
-            if (namespace === HTML_NAMESPACE) {
-                return createElement(tag, typeExtension);
-            } else {
-                return domCreateElementNS(namespace, tag);
-            }
-        }
-        function createElement(tag, typeExtension) {
-            var definition = getRegisteredDefinition(typeExtension || tag);
-            if (definition) {
-                if (tag == definition.tag && typeExtension == definition.is) {
-                    return new definition.ctor();
-                }
-                if (!typeExtension && !definition.is) {
-                    return new definition.ctor();
-                }
-            }
-            if (typeExtension) {
-                var element = createElement(tag);
-                element.setAttribute("is", typeExtension);
-                return element;
-            }
-            var element = domCreateElement(tag);
-            if (tag.indexOf("-") >= 0) {
-                implement(element, HTMLElement);
-            }
-            return element;
-        }
-        function upgradeElement(element) {
-            if (!element.__upgraded__ && element.nodeType === Node.ELEMENT_NODE) {
-                var is = element.getAttribute("is");
-                var definition = getRegisteredDefinition(is || element.localName);
-                if (definition) {
-                    if (is && definition.tag == element.localName) {
-                        return upgrade(element, definition);
-                    } else if (!is && !definition.extends) {
-                        return upgrade(element, definition);
-                    }
-                }
-            }
-        }
-        function cloneNode(deep) {
-            var n = domCloneNode.call(this, deep);
-            scope.upgradeAll(n);
-            return n;
-        }
-        var domCreateElement = document.createElement.bind(document);
-        var domCreateElementNS = document.createElementNS.bind(document);
-        var domCloneNode = Node.prototype.cloneNode;
-        document.registerElement = register;
-        document.createElement = createElement;
-        document.createElementNS = createElementNS;
-        Node.prototype.cloneNode = cloneNode;
-        scope.registry = registry;
-        scope.upgrade = upgradeElement;
     }
-    var isInstance;
-    if (!Object.__proto__ && !useNative) {
-        isInstance = function(obj, ctor) {
-            var p = obj;
-            while (p) {
-                if (p === ctor.prototype) {
-                    return true;
-                }
-                p = p.__proto__;
-            }
-            return false;
-        };
-    } else {
-        isInstance = function(obj, base) {
-            return obj instanceof base;
-        };
-    }
-    scope.instanceof = isInstance;
-    scope.reservedTagList = reservedTagList;
-    document.register = document.registerElement;
+    scope.IMPORT_LINK_TYPE = IMPORT_LINK_TYPE;
+    scope.isImportLoaded = isImportLoaded;
+    scope.importLoader = importLoader;
+    scope.importer = importer;
+    scope.whenReady = whenImportsReady;
     scope.hasNative = hasNative;
     scope.useNative = useNative;
-})(window.CustomElements);
+    scope.whenImportsReady = whenImportsReady;
+})(window.HTMLImports);
 
 (function(scope) {
-    var logFlags = window.logFlags || {};
-    var IMPORT_LINK_TYPE = window.HTMLImports ? HTMLImports.IMPORT_LINK_TYPE : "none";
-    function findAll(node, find, data) {
-        var e = node.firstElementChild;
-        if (!e) {
-            e = node.firstChild;
-            while (e && e.nodeType !== Node.ELEMENT_NODE) {
-                e = e.nextSibling;
-            }
-        }
-        while (e) {
-            if (find(e, data) !== true) {
-                findAll(e, find, data);
-            }
-            e = e.nextElementSibling;
-        }
-        return null;
-    }
-    function forRoots(node, cb) {
-        var root = node.shadowRoot;
-        while (root) {
-            forSubtree(root, cb);
-            root = root.olderShadowRoot;
-        }
-    }
-    function forSubtree(node, cb) {
-        findAll(node, function(e) {
-            if (cb(e)) {
-                return true;
-            }
-            forRoots(e, cb);
-        });
-        forRoots(node, cb);
-    }
-    function added(node) {
-        if (upgrade(node)) {
-            insertedNode(node);
-            return true;
-        }
-        inserted(node);
-    }
-    function addedSubtree(node) {
-        forSubtree(node, function(e) {
-            if (added(e)) {
-                return true;
-            }
-        });
-    }
-    function addedNode(node) {
-        return added(node) || addedSubtree(node);
-    }
-    function upgrade(node) {
-        if (!node.__upgraded__ && node.nodeType === Node.ELEMENT_NODE) {
-            var type = node.getAttribute("is") || node.localName;
-            var definition = scope.registry[type];
-            if (definition) {
-                logFlags.dom && console.group("upgrade:", node.localName);
-                scope.upgrade(node);
-                logFlags.dom && console.groupEnd();
-                return true;
-            }
-        }
-    }
-    function insertedNode(node) {
-        inserted(node);
-        if (inDocument(node)) {
-            forSubtree(node, function(e) {
-                inserted(e);
-            });
-        }
-    }
-    var hasPolyfillMutations = !window.MutationObserver || window.MutationObserver === window.JsMutationObserver;
-    scope.hasPolyfillMutations = hasPolyfillMutations;
-    var isPendingMutations = false;
-    var pendingMutations = [];
-    function deferMutation(fn) {
-        pendingMutations.push(fn);
-        if (!isPendingMutations) {
-            isPendingMutations = true;
-            var async = window.Platform && window.Platform.endOfMicrotask || setTimeout;
-            async(takeMutations);
-        }
-    }
-    function takeMutations() {
-        isPendingMutations = false;
-        var $p = pendingMutations;
-        for (var i = 0, l = $p.length, p; i < l && (p = $p[i]); i++) {
-            p();
-        }
-        pendingMutations = [];
-    }
-    function inserted(element) {
-        if (hasPolyfillMutations) {
-            deferMutation(function() {
-                _inserted(element);
-            });
-        } else {
-            _inserted(element);
-        }
-    }
-    function _inserted(element) {
-        if (element.attachedCallback || element.detachedCallback || element.__upgraded__ && logFlags.dom) {
-            logFlags.dom && console.group("inserted:", element.localName);
-            if (inDocument(element)) {
-                element.__inserted = (element.__inserted || 0) + 1;
-                if (element.__inserted < 1) {
-                    element.__inserted = 1;
-                }
-                if (element.__inserted > 1) {
-                    logFlags.dom && console.warn("inserted:", element.localName, "insert/remove count:", element.__inserted);
-                } else if (element.attachedCallback) {
-                    logFlags.dom && console.log("inserted:", element.localName);
-                    element.attachedCallback();
-                }
-            }
-            logFlags.dom && console.groupEnd();
-        }
-    }
-    function removedNode(node) {
-        removed(node);
-        forSubtree(node, function(e) {
-            removed(e);
-        });
-    }
-    function removed(element) {
-        if (hasPolyfillMutations) {
-            deferMutation(function() {
-                _removed(element);
-            });
-        } else {
-            _removed(element);
-        }
-    }
-    function _removed(element) {
-        if (element.attachedCallback || element.detachedCallback || element.__upgraded__ && logFlags.dom) {
-            logFlags.dom && console.group("removed:", element.localName);
-            if (!inDocument(element)) {
-                element.__inserted = (element.__inserted || 0) - 1;
-                if (element.__inserted > 0) {
-                    element.__inserted = 0;
-                }
-                if (element.__inserted < 0) {
-                    logFlags.dom && console.warn("removed:", element.localName, "insert/remove count:", element.__inserted);
-                } else if (element.detachedCallback) {
-                    element.detachedCallback();
-                }
-            }
-            logFlags.dom && console.groupEnd();
-        }
-    }
-    function wrapIfNeeded(node) {
-        return window.ShadowDOMPolyfill ? ShadowDOMPolyfill.wrapIfNeeded(node) : node;
-    }
-    function inDocument(element) {
-        var p = element;
-        var doc = wrapIfNeeded(document);
-        while (p) {
-            if (p == doc) {
-                return true;
-            }
-            p = p.parentNode || p.host;
-        }
-    }
-    function watchShadow(node) {
-        if (node.shadowRoot && !node.shadowRoot.__watched) {
-            logFlags.dom && console.log("watching shadow-root for: ", node.localName);
-            var root = node.shadowRoot;
-            while (root) {
-                watchRoot(root);
-                root = root.olderShadowRoot;
-            }
-        }
-    }
-    function watchRoot(root) {
-        if (!root.__watched) {
-            observe(root);
-            root.__watched = true;
-        }
-    }
+    var IMPORT_LINK_TYPE = scope.IMPORT_LINK_TYPE;
+    var importSelector = "link[rel=" + IMPORT_LINK_TYPE + "]";
+    var importer = scope.importer;
+    var parser = scope.parser;
     function handler(mutations) {
-        if (logFlags.dom) {
-            var mx = mutations[0];
-            if (mx && mx.type === "childList" && mx.addedNodes) {
-                if (mx.addedNodes) {
-                    var d = mx.addedNodes[0];
-                    while (d && d !== document && !d.host) {
-                        d = d.parentNode;
-                    }
-                    var u = d && (d.URL || d._URL || d.host && d.host.localName) || "";
-                    u = u.split("/?").shift().split("/").pop();
-                }
+        for (var i = 0, l = mutations.length, m; i < l && (m = mutations[i]); i++) {
+            if (m.type === "childList" && m.addedNodes.length) {
+                addedNodes(m.addedNodes);
             }
-            console.group("mutations (%d) [%s]", mutations.length, u || "");
         }
-        mutations.forEach(function(mx) {
-            if (mx.type === "childList") {
-                forEach(mx.addedNodes, function(n) {
-                    if (!n.localName) {
-                        return;
-                    }
-                    addedNode(n);
-                });
-                forEach(mx.removedNodes, function(n) {
-                    if (!n.localName) {
-                        return;
-                    }
-                    removedNode(n);
-                });
+    }
+    function addedNodes(nodes) {
+        var owner;
+        for (var i = 0, l = nodes.length, n; i < l && (n = nodes[i]); i++) {
+            owner = owner || n.ownerDocument;
+            if (shouldLoadNode(n)) {
+                importer.loadNode(n);
             }
-        });
-        logFlags.dom && console.groupEnd();
+            if (n.children && n.children.length) {
+                addedNodes(n.children);
+            }
+        }
     }
+    function shouldLoadNode(node) {
+        return node.nodeType === 1 && matches.call(node, importer.loadSelectorsForNode(node));
+    }
+    var matches = HTMLElement.prototype.matches || HTMLElement.prototype.matchesSelector || HTMLElement.prototype.webkitMatchesSelector || HTMLElement.prototype.mozMatchesSelector || HTMLElement.prototype.msMatchesSelector;
     var observer = new MutationObserver(handler);
-    function takeRecords() {
-        handler(observer.takeRecords());
-        takeMutations();
-    }
-    var forEach = Array.prototype.forEach.call.bind(Array.prototype.forEach);
-    function observe(inRoot) {
-        observer.observe(inRoot, {
+    function observe(root) {
+        observer.observe(root, {
             childList: true,
             subtree: true
         });
     }
-    function observeDocument(doc) {
-        observe(doc);
-    }
-    function upgradeDocument(doc) {
-        logFlags.dom && console.group("upgradeDocument: ", doc.baseURI.split("/").pop());
-        addedNode(doc);
-        logFlags.dom && console.groupEnd();
-    }
-    function upgradeDocumentTree(doc) {
-        doc = wrapIfNeeded(doc);
-        var imports = doc.querySelectorAll("link[rel=" + IMPORT_LINK_TYPE + "]");
-        for (var i = 0, l = imports.length, n; i < l && (n = imports[i]); i++) {
-            if (n.import && n.import.__parsed) {
-                upgradeDocumentTree(n.import);
-            }
-        }
-        upgradeDocument(doc);
-    }
-    scope.IMPORT_LINK_TYPE = IMPORT_LINK_TYPE;
-    scope.watchShadow = watchShadow;
-    scope.upgradeDocumentTree = upgradeDocumentTree;
-    scope.upgradeAll = addedNode;
-    scope.upgradeSubtree = addedSubtree;
-    scope.insertedNode = insertedNode;
-    scope.observeDocument = observeDocument;
-    scope.upgradeDocument = upgradeDocument;
-    scope.takeRecords = takeRecords;
-})(window.CustomElements);
+    scope.observe = observe;
+    importer.observe = observe;
+})(HTMLImports);
 
-(function(scope) {
-    var IMPORT_LINK_TYPE = scope.IMPORT_LINK_TYPE;
-    var parser = {
-        selectors: [ "link[rel=" + IMPORT_LINK_TYPE + "]" ],
-        map: {
-            link: "parseLink"
-        },
-        parse: function(inDocument) {
-            if (!inDocument.__parsed) {
-                inDocument.__parsed = true;
-                var elts = inDocument.querySelectorAll(parser.selectors);
-                forEach(elts, function(e) {
-                    parser[parser.map[e.localName]](e);
-                });
-                CustomElements.upgradeDocument(inDocument);
-                CustomElements.observeDocument(inDocument);
-            }
-        },
-        parseLink: function(linkElt) {
-            if (isDocumentLink(linkElt)) {
-                this.parseImport(linkElt);
-            }
-        },
-        parseImport: function(linkElt) {
-            if (linkElt.import) {
-                parser.parse(linkElt.import);
-            }
-        }
-    };
-    function isDocumentLink(inElt) {
-        return inElt.localName === "link" && inElt.getAttribute("rel") === IMPORT_LINK_TYPE;
+(function() {
+    if (typeof window.CustomEvent !== "function") {
+        window.CustomEvent = function(inType, dictionary) {
+            var e = document.createEvent("HTMLEvents");
+            e.initEvent(inType, dictionary.bubbles === false ? false : true, dictionary.cancelable === false ? false : true, dictionary.detail);
+            return e;
+        };
     }
-    var forEach = Array.prototype.forEach.call.bind(Array.prototype.forEach);
-    scope.parser = parser;
-    scope.IMPORT_LINK_TYPE = IMPORT_LINK_TYPE;
-})(window.CustomElements);
-
-window.CustomElements = window.CustomElements || {
-    flags: {}
-};
+    var doc = window.ShadowDOMPolyfill ? window.ShadowDOMPolyfill.wrapIfNeeded(document) : document;
+    HTMLImports.whenImportsReady(function() {
+        HTMLImports.ready = true;
+        HTMLImports.readyTime = new Date().getTime();
+        doc.dispatchEvent(new CustomEvent("HTMLImportsLoaded", {
+            bubbles: true
+        }));
+    });
+    if (!HTMLImports.useNative) {
+        function bootstrap() {
+            HTMLImports.importer.bootDocument(doc);
+        }
+        if (document.readyState === "complete" || document.readyState === "interactive" && !window.attachEvent) {
+            bootstrap();
+        } else {
+            document.addEventListener("DOMContentLoaded", bootstrap);
+        }
+    }
+})();

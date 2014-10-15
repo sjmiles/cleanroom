@@ -122,7 +122,7 @@ var modules = [
   'TouchEvent.js',
   'TreeScope.js',
   'Window.js',
-  //'build-json.js',
+  'build-json.js',
   'createTable.js',
   'custom-element.js',
   'events.js',

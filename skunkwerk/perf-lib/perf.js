@@ -1,16 +1,16 @@
 console.perf = function() {
   console.timeline();
   console.profile();
-  time = Date.now();  
+  console.perf.time = Date.now();  
 }
 
 console.perfEnd = function() {
   requestAnimationFrame(function() {
     requestAnimationFrame(function() {
       requestAnimationFrame(function() {
-        time = (Date.now() - time) + 'ms';
+        var time = (Date.now() - console.perf.time) + 'ms';
         console.profileEnd();
-        document.title = time;
+        document.title += ' (' + time + ')';
         if (window.top !== window) {
           window.top.postMessage(time, '*');
         }

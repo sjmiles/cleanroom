@@ -17,13 +17,19 @@
       xdisplay: none;
     }  
     o {
+      display: inline-block;
       color: rgba(255, 0, 0, 0.5);
+      width: 42px;
       margin: 1px;
+      text-align: right;
     }
     n {
+      display: inline-block;
       color: green;
       font-weight: bold;
+      width: 42px;
       margin: 2px;
+      text-align: right;
     }
   </style>
 
@@ -155,7 +161,7 @@
           ;
         info += '<hr>';
         //
-        info += '<span style="font-size: 0.7em">';
+        info += '<span style="font-size: 0.6em">';
         for (var j=0, v; v=times[j]; j++) {
           var o = stats.outlier(v);
           info += (o ? '<o>' : '<n>') + v + (o ? '</o>' : '</n>') + '|';

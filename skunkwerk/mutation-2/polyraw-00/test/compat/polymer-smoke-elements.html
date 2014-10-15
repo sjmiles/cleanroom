@@ -1,0 +1,315 @@
+<link rel="import" href="../../polymer/polymer.html">
+
+<!-- 
+  Below, some elements add additional features to Base.
+  Ideally we Just Work under this scenario, but we need to take care 
+  because we are sharing a base class and there could be name-collisions.
+-->
+
+<!-- raw -->
+
+<script>
+
+  Polymer({
+
+    name: 'x-trivial',
+
+    // stubbing out `features` gives us maximum vanilla
+    
+    features: function() {
+    },
+
+    // `created` is non-standard, `createdCallback` is used by the library
+
+    created: function() {
+      /* no other way other than /deep/ to make this element block level */ 
+      this.style.display = 'block';
+      this.style.padding = '8px';
+      this.innerHTML = '<i>Hey</i>, is this script <b>on</b>?'; 
+    },
+    
+    // these standard callbacks are available
+
+    attachedCallback: function() {
+    },
+
+    detachedCallback: function() {
+    },
+
+    attributeChangedCallback: function() {
+    }
+
+  });
+
+</script>
+
+
+<!-- using a template -->
+<template>
+  
+  <i>Hey</i>, is this template <b>on</b>?
+   
+</template>
+<script>
+
+  Polymer({
+
+    name: 'x-template',
+    
+    features: function() {
+      // use template feature
+      this.stampTemplate();
+    },
+
+    created: function() {
+      this.style.display = 'block';
+      this.style.padding = '8px';
+    }
+
+  });
+
+</script>
+
+<!-- using a shadow-root -->
+<template>
+
+  <style>
+    /* now there is a clean way to make ourselves display: block */
+    :host {
+      display: block;
+      padding: 8px;
+    }
+  </style>
+
+  <i>Hey</i>, is this shadow-root <content></content>?
+
+</template>
+<script>
+
+  Polymer({
+
+    name: 'x-shadow',
+
+    features: function() {
+      // use shadow feature
+      this.createShadow();
+      // use template feature
+      this.stampTemplate();
+    }
+    
+  });
+
+</script>
+
+<!-- inexpensive `nodes` feature -->
+<template>
+  
+  <i id="exclaim"></i>, is the node feature <b>on</b>?
+   
+</template>
+<script>
+
+  Polymer({
+
+    name: 'x-cheapgood-nodes',
+
+    features: function() {
+      // use template feature
+      this.stampTemplate();
+      // use `nodes` feature
+      this.marshalNodeReferences();
+    },
+
+    created: function() {
+      this.style.display = 'block';
+      this.style.padding = '8px';
+      // `nodes` features populates `$` map from id's in the template 
+      this.$.exclaim.textContent = 'Hey';
+    }
+
+  });
+
+</script>
+
+<!-- inexpensive `listeners` feature -->
+<template>
+
+  <i id="exclaim"></i>, are listeners <b>on</b>?
+
+</template>
+<script>
+
+  Polymer({
+
+    name: 'x-cheapgood-listeners',
+
+    listeners: {
+      click: 'clickAction',
+      'exclaim.click': 'exclaimClickAction'
+    },
+
+    features: function() {
+      // use template feature
+      this.stampTemplate();
+      // use `nodes` feature
+      this.marshalNodeReferences();
+      // use `listeners` feature
+      this.listenListeners();
+    },
+
+    created: function() {
+      this.style.display = 'block';
+      this.style.padding = '8px';
+      this.$.exclaim.textContent = 'Hey';
+    },
+
+    clickAction: function() {
+      this.style.backgroundColor = 'lightblue';
+    },
+
+    exclaimClickAction: function(e) {
+      e.stopPropagation();
+      this.style.backgroundColor = 'orange';
+    }
+
+  });
+
+</script>
+
+<!-- uses standard features (shadow, template, nodes, listeners) -->
+  
+<template>
+
+  <style>
+    :host {
+      display: block;
+      padding: 8px;
+    }
+  </style>
+
+  <i id="exclaim"></i>, is simple mode <b>on</b>?
+
+</template>
+<script>
+
+  Polymer({
+
+    name: 'x-simple',
+
+    listeners: {
+      click: 'clickAction',
+      'exclaim.click': 'exclaimClickAction'
+    },
+
+    created: function() {
+      this.$.exclaim.textContent = 'Hey';
+    },
+
+    clickAction: function() {
+      this.style.backgroundColor = 'lightblue';
+    },
+
+    exclaimClickAction: function(e) {
+      e.stopPropagation();
+      this.style.backgroundColor = 'orange';
+    }
+
+  });
+
+</script>
+
+<!--
+  
+  Can stop here if you want clean-and-simple.
+  
+  This smoke test goes on to import and exercise some optional features
+  to make sure everything plays well together. 
+
+-->
+
+<!-- import and use `bind` feature -->
+
+<link rel="import" href="../../polymer/more-features/bind.html">
+
+<template>
+
+  <style>
+    :host {
+      display: block;
+      padding: 8px;
+    }
+  </style>
+
+  <i id="exclaim"></i>, is fancy bind mode <b id="state"></b>?
+
+</template>
+<script>
+
+  Polymer({
+
+    name: 'x-fancy-bind',
+
+    listeners: {
+      click: 'clickAction'
+    },
+    
+    bind: {
+      // property: target (set property is pushed to $.<target>[.textContent])
+      exclaim: 'exclaim',
+      state: 'state'
+    },
+
+    created: function() {
+      // NOTE: binding feature turns on automatically at prototype level, if
+      // you include a `bind` object in your prototype.
+      // These properties automatically propagate to DOM as defined
+      // by the `bind` object.
+      this.exclaim = 'Hey';
+      this.state = 'on';
+    },
+
+    clickAction: function() {
+      this.state = 'LIVE';
+    }
+
+  });
+
+</script>
+
+<!-- template annotations feature -->
+
+<link rel="import" href="../../polymer/more-features/annotations.html">
+<link rel="import" href="../../polymer/more-features/bind-annotations.html">
+
+<template>
+
+  <style>
+    :host {
+      display: block;
+      padding: 8px;
+    }
+  </style>
+
+  <i>{{exclaim}}</i>, is fancy annotations mode <b>{{state}}</b>?
+
+</template>
+<script>
+
+  Polymer({
+
+    name: 'x-fancy-annotations',
+
+    created: function() {
+      // NOTE: annotations feature turns on automatically at prototype level, 
+      // need to gate this as it's affecting all elements with templates
+      // now.
+      // Create bindings from annotations.
+      this.marshalBoundNodes();
+      // These properties automatically propagate to DOM as defined
+      // by the template annotations.
+      this.exclaim = 'Hey';
+      this.state = 'on';
+    }
+  });
+
+</script>

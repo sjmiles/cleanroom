@@ -1,0 +1,75 @@
+<link rel="import" href="../polymer/more-features/layout.html">
+<link rel="import" href="../polymer/more-features/attributes.html">
+
+<script>
+(function() {
+  
+  Polymer({
+    name: 'x-overlay-scrim',
+    created: function() {
+      this.opened = 0;
+      this.style.cssText = 'position: absolute; top: 0; left: 0; height: 100vh;'
+        + 'width: 100vw; background-color: rgba(128, 128, 128, 0.9);'
+        + 'pointer-events: none; opacity: 0; transition: opacity 100ms ease-out;'
+        ;
+      document.body.appendChild(this);
+    },
+    open: function() {
+      this.opened++;
+      this.style.pointerEvents = '';
+      this.style.display = '';
+      this.style.opacity = 1;
+    },
+    close: function() {
+      if (--this.opened === 0) {
+        this.style.opacity = 0;
+        this.style.pointerEvents = 'none';
+      }
+    }
+  });
+  
+  var scrim;
+  
+  Polymer({
+    name: 'x-overlay',
+    hostAttributes: 'block',
+    created: function() {
+      this.requireScrim();
+      this.style.display = 'none';
+      this.parent = this.parentNode;
+      this.container = document.createElement('div');
+      this.container.style.cssText = 'position: absolute; top: 0; left: 0; right: 0; bottom: 0;'
+      this.cloneAttributes(this.container, 'vertical center-center layout');
+    },
+    requireScrim: function() {
+      if (!scrim) {
+        scrim = document.createElement('x-overlay-scrim');
+      }
+    },
+    open: function(box) {
+      var s = this.container.style;
+      if (!box) {
+        s.top = s.right = s.bottom = s.left = 0;
+      } else {
+        s.top = box.top + 'px';
+        s.left = box.left + 'px';
+        s.bottom = s.right = '';
+      }
+      //
+      this.container.appendChild(this);
+      scrim.appendChild(this.container);
+      //
+      this.style.display = '';
+      //
+      scrim.open();
+    },
+    close: function() {
+      scrim.close();
+      this.style.display = 'none';
+      this.parent.appendChild(this);
+      this.container.remove();
+    }
+  });
+
+})();
+</script>

@@ -1,0 +1,39 @@
+<link rel="import" href="polymer-root.html">
+<link rel="import" href="features/template.html">
+<link rel="import" href="features/nodes.html">
+<link rel="import" href="features/events.html">
+<link rel="import" href="features/keys.html">
+<link rel="import" href="features/content.html">
+<link rel="import" href="features/utils.html">
+
+<script>
+
+  Base.addFeature({
+
+    init: function() {
+      this.features();
+    },
+
+    features: function() {
+      this.defaultFeatures();
+    },
+    
+    defaultFeatures: function() {
+      if (this._useContent) {
+        this.poolContent();
+      }
+      if (this._template) {
+        this.stampTemplate();
+      }
+      this.marshalNodeReferences();
+      this.listenListeners();
+      this.listenKeyPresses();
+      if (this._useContent) {
+        this.distributeContent();
+      }
+    }
+
+  });
+ 
+</script>
+

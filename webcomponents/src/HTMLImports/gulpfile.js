@@ -4,11 +4,12 @@ var
   uglify = require('gulp-uglify')
   ;
 
-var module = 'HtmlImports';
+var module = 'HTMLImports';
+var srcs = require('./build.json');
 
 gulp.task('default', function() {
 
-  gulp.src('src/*.js')
+  gulp.src(srcs)
     .pipe(concat(module + '.js'))
     .pipe(uglify({
       mangle: false,
@@ -20,7 +21,7 @@ gulp.task('default', function() {
     .pipe(gulp.dest('../../dist/'))
   ;
   
-  gulp.src('src/*.js')
+  gulp.src(srcs)
     .pipe(concat(module + '.min.js'))
     .pipe(uglify())
     .pipe(gulp.dest('../../dist/'))

@@ -1,0 +1,29 @@
+<link rel="import" href="polymer-root.html">
+<link rel="import" href="features/shadow.html">
+<link rel="import" href="features/template.html">
+<link rel="import" href="features/nodes.html">
+<link rel="import" href="features/events.html">
+<link rel="import" href="features/keys.html">
+
+<script>
+
+  Base.addFeature({
+
+    init: function() {
+      this.features();
+    },
+
+    features: function() {
+      if (this._template) {
+        this.createShadow();
+        this.stampTemplate();
+        this.marshalNodeReferences();
+      }
+      this.listenListeners();
+      this.listenKeyPresses();
+    }
+
+  });
+ 
+</script>
+
